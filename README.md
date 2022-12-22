@@ -1,5 +1,7 @@
 # StatementAnalysisAutomationHSE
 
+Ветка для разработки фронтенда (изменения подтягиваются с main)
+
 **Порядок действий для взаимодействия с программой:**
 1. `pip install -r requirements.txt`
 2. Настройте сервисный Google аккаунт, который будет дергать Google API: [инструкция](https://pygsheets.readthedocs.io/en/staging/authorization.html). В параграфе Service Account вы скачаете json с данными сервисного аккаунта. Переименуйте его в `client.json` и положите в папку [client](https://github.com/timofeeva-yuv/StatementAnalysisAutomationHSE/blob/main/client) (или скопируйте его содержимое в уже существующий пустой файл [client/client.json](https://github.com/timofeeva-yuv/StatementAnalysisAutomationHSE/blob/main/client/client.json))
