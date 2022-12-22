@@ -1,0 +1,7 @@
+datetime
+http
+numpy
+pandas
+pygsheets
+requests
+tqdm

@@ -1,0 +1,37 @@
+{
+    "URL_COLUMN": "G",
+    "START_ROW": 3,
+    "ROOT_TABLE_ATTRS": [
+                           "ID", 
+                           "Level", 
+                           "Program", 
+                           "Year", 
+                           "Module", 
+                           "Discipline", 
+                           "Teacher", 
+                           "URL", 
+                           "Row", 
+                           "Type", 
+                           "IsParsed", 
+                           "ErrorName", 
+                           "Text"
+                          ], 
+    "ATTR_COLUMNS": {
+                     "LEVEL": 0, 
+                     "PROGRAM": 1,
+                     "YEAR": 2,
+                     "MODULE": 3,
+                     "DISCIPLINE": 4,
+                     "TEACHER": 5,
+                     "URL": 6           
+                    },
+    "URL_TYPE": {
+                 "docs.google.com/spreadsheets": "Google Sheet",
+                 "drive.google.com/drive/folders": "Drive Directory",
+                 "drive.google.com/file/d": "Drive PDF",
+                 "drive.google.com/file": "Drive Unknown File",
+                 "sharepoint.com": "Sharepoint",
+                 "teams.microsoft.com": "MS Teams",
+                 "dropbox.com": "Dropbox"
+                }
+}
