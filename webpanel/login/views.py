@@ -7,7 +7,7 @@ from django.contrib.auth import authenticate, login
 
 def index(request):
     if request.user.is_authenticated:
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect('/sandbox')
     error = ''
     if request.method == "POST":
         user = authenticate(request, username=request.POST['username'], password=request.POST['pass'])
