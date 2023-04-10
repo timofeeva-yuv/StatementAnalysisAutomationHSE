@@ -1,6 +1,11 @@
 {
     "URL_COLUMN": "G",
     "START_ROW": 3,
+    "NAME_COLUMN_THRESHOLD": 0.7,
+    "GROUP_COLUMN_THRESHOLD": 0.1,
+    "MARK_COLUMN_THRESHOLD": 0.2,
+    "MARK_COUNT_THRESHOLD": 2,
+    "UPDATE": 1,
     "ROOT_TABLE_ATTRS": [
                            "ID", 
                            "Level", 
@@ -14,8 +19,17 @@
                            "Type", 
                            "IsParsed", 
                            "ErrorName", 
-                           "Text"
-                          ], 
+                           "Text",
+                           "Path",
+                           "MeanMark",
+                           "MeanPositiveMark",
+                           "MeanMeanMark",
+                           "Excellent",
+                           "Good",
+                           "Satisfactory",
+                           "Fail"
+                          ],
+                          
     "ATTR_COLUMNS": {
                      "LEVEL": 0, 
                      "PROGRAM": 1,
@@ -25,6 +39,37 @@
                      "TEACHER": 5,
                      "URL": 6           
                     },
+                    
+    "STUDENT_TABLE_ATTRS": [
+                           "ID", 
+                           "Name", 
+                           "Year", 
+                           "Group", 
+                           "Program", 
+                           "Email", 
+                           "IDCard",
+                           "MarkSum",
+                           "MarkCount",
+                           "Mean",
+                           "Excellent",
+                           "Good",
+                           "Satisfactory",
+                           "Fail"
+                          ],
+                          
+    "MARK_TABLE_ATTRS": [
+                           "ID", 
+                           "Student", 
+                           "Group",
+                           "MarksDict",
+                           "MarksNorm", 
+                           "Excellent",
+                           "Good",
+                           "Satisfactory",
+                           "Fail",
+                           "Mean"
+                          ], 
+
     "URL_TYPE": {
                  "docs.google.com/spreadsheets": "Google Sheet",
                  "drive.google.com/drive/folders": "Drive Directory",
