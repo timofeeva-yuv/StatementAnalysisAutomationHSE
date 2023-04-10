@@ -493,7 +493,7 @@ if __name__ == "__main__":
                 suff += 1
         df_marks.to_csv(ws_path, sep=";", header=config["MARK_TABLE_ATTRS"], index=False)
 
-        # Обновляем root-таблицу
+        # Обновляем root-таблицу и таблицу студентов
         ind = [df_root[df_root.ID == id_sheet].index[0]]
         row = df_root.loc[ind]
         row.IsParsed = True
@@ -510,5 +510,6 @@ if __name__ == "__main__":
         row.Fail = df_marks.Fail.sum()
         df_root.loc[ind] = row
         df_root.to_csv(path + "/root.csv", sep=";", header=config["ROOT_TABLE_ATTRS"], index=False)
+        df_students.to_csv(path + "/students.csv", sep=";", header=config["ROOT_TABLE_ATTRS"], index=False)
 
     print("Парсинг завершен успешно")
