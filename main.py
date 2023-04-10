@@ -510,6 +510,6 @@ if __name__ == "__main__":
         row.Fail = df_marks.Fail.sum()
         df_root.loc[ind] = row
         df_root.to_csv(path + "/root.csv", sep=";", header=config["ROOT_TABLE_ATTRS"], index=False)
-        df_students.to_csv(path + "/students.csv", sep=";", header=config["ROOT_TABLE_ATTRS"], index=False)
+        df_students.to_csv(path + "/students.csv", sep=";", header=config["STUDENT_TABLE_ATTRS"], index=False)
 
     print("Парсинг завершен успешно")
