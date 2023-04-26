@@ -1,0 +1,19 @@
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  const ctx_doughnut = document.getElementById('{{ chart_id }}');
+  const data_doughnut = {
+    labels: {{ labels|safe }},
+    datasets: [{
+      {#label: 'urls',#}
+      data: {{ values|safe }},
+      {#backgroundColor: {{ doughnut_colors|safe }},#}
+      borderWidth: 1
+    }]
+  };
+
+  new Chart(ctx_doughnut, {
+    type: 'doughnut',
+    data: data_doughnut
+  });
+</script>

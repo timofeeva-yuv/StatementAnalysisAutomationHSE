@@ -1,0 +1,124 @@
+<style>
+#parent {
+  overflow: hidden;
+}
+.right-chart-container {
+  float: right;
+  height: 70vh;
+  width: calc(100vw - 72vh);
+}
+.left-chart-container {
+  overflow: hidden;
+  height: 70vh;
+  width: 70vh;
+}
+.right-top-chart-container {
+  float: top;
+  height: 34vh;
+}
+.right-bottom-chart-container {
+  float: bottom;
+  height: 34vh;
+}
+.dataframe-table {
+    margin-top: 20px;
+    width: 100vw;
+}
+
+</style>
+  <div id="parent">
+    <div class="right-chart-container">
+      <div class="right-top-chart-container">
+        <canvas id="bar-chart"></canvas>
+      </div>
+
+      <div class="right-bottom-chart-container">
+        <canvas id="double-bar-chart"></canvas>
+      </div>
+    </div>
+
+    <div class="left-chart-container">
+      <canvas id="doughnut-chart"></canvas>
+    </div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  const ctx_doughnut = document.getElementById('doughnut-chart');
+  const data_doughnut = {
+    labels: {{ doughnut_labels|safe }},
+    datasets: [{
+      label: 'urls',
+      data: {{ doughnut_values|safe }},
+      backgroundColor: {{ doughnut_colors|safe }},
+      borderWidth: 1
+    }]
+  };
+
+  new Chart(ctx_doughnut, {
+    type: 'doughnut',
+    data: data_doughnut
+  });
+</script>
+
+<script>
+  const ctx_bar = document.getElementById('bar-chart');
+  const data_bar = {
+    labels: {{ bar_labels|safe }},
+    datasets: [{
+      label: 'Errors',
+      data: {{ bar_values|safe }},
+      backgroundColor: '{{ bar_color|safe }}'
+    }]
+  };
+
+  new Chart(ctx_bar, {
+    type: 'bar',
+    data: data_bar,
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    },
+  });
+</script>
+
+<script>
+  const ctx_double_bar = document.getElementById('double-bar-chart');
+  const data_double_bar = {
+    labels: {{ double_bar_labels|safe }},
+    datasets: [
+      {
+        label: '{{ double_bar_data_labels0|safe }}',
+        data: {{ double_bar_values0|safe }},
+        backgroundColor: '{{ double_bar_colors0|safe }}'
+      },
+      {
+        label: '{{ double_bar_data_labels1|safe }}',
+        data: {{ double_bar_values1|safe }},
+        backgroundColor: '{{ double_bar_colors1|safe }}'
+      }
+    ]
+  };
+
+  new Chart(ctx_double_bar, {
+    type: 'bar',
+    data: data_double_bar,
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    },
+  });
+</script>
+
+<body>
+<div class="dataframe-table">
+    {{ df|safe }}
+</div>
+</body>

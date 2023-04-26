@@ -4,6 +4,8 @@
 *.iml
 .idea/
 *.pyc
+*.ipynb
 db.sqlite3
 migrations/
 .DS_Store
+README.md

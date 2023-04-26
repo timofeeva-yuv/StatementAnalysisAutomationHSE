@@ -1,7 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseRedirect
-from .models import CustomUser
-from .forms import LoginForm
+from django.http import HttpResponseRedirect
 from django.contrib.auth import authenticate, login
 
 
