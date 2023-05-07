@@ -32,23 +32,28 @@ class StatementAnalysis(object):
         self.df_students = self.__parse_students_lists()
         self.group_names = self.__get_group_names()
         
-        self.db = self.__create_db()
+        self.__create_db()
     
     def __call__(self, url, upd=False):
         self.root_df = self.__parse_root(url, upd)
         self.df_students = self.__parse_students_lists()        
-        self.db = self.__create_db()
+        self.__create_db()
     
     def get(self, cmd):
         result = []
+        db =  self.conn.cursor()
         if cmd == "Неуспевающие":
-            res = self.db.execute('SELECT ID, Name, CAST(SUM("0" + "1" + "2" + "3") AS real) / CAST(MarkCount AS real) AS "Доля неудов" FROM students GROUP BY ID, Name ORDER BY "Доля неудов" DESC')
+            res = db.execute('SELECT ID, Name, CAST(SUM("0" + "1" + "2" + "3") AS real) / CAST(MarkCount AS real) AS "Доля неудов" FROM students GROUP BY ID, Name ORDER BY "Доля неудов" DESC')
             result = res.fetchall()
             result = result[:int(0.05 * len(result))] # 5% по доле неудов
         elif cmd == "Завышение":
-            res = self.db.execute('SELECT * FROM root WHERE "10" / MarkCount >= 0.5')
+            res = db.execute('SELECT * FROM root WHERE "10" / MarkCount >= 0.5')
             result = res.fetchall()
+        db.close()
         return result
+    
+    def __del__(self):
+        self.conn.close()
     
         # В SQL-базе вместо поля Group будет GroupNumber (Group - служебное слово)
     def __make_db_attrs(self, table_name):
@@ -78,7 +83,7 @@ class StatementAnalysis(object):
         self.conn.commit()
         self.df_students.to_sql('students', self.conn, if_exists='replace', index = False)
         
-        return db
+        db.close()
         
     def __parse_root(self, url, upd):
         gc = pygsheets.authorize(service_file="client/client.json")
@@ -499,12 +504,14 @@ class StatementAnalysis(object):
             df_students.to_csv(self.path + "/students.csv", sep=";", header=self.config["STUDENT_TABLE_ATTRS"], index=False)
             
             # Заносим данные во внутреннюю базу
-            df_root.to_sql('root', self.db, if_exists='replace', index = False)
-            df_students.to_sql('students', self.db, if_exists='replace', index = False)
+            db = self.conn.cursor()
+            df_root.to_sql('root', db , if_exists='replace', index = False)
+            df_students.to_sql('students', db, if_exists='replace', index = False)
             table_name = ws_path[len(path + "/statements/"):-4]
             self.db.execute('CREATE TABLE {} {}'.format(table_name, self.marks_db_attrs))
             self.conn.commit()
             df_marks.to_sql(table_name, self.conn, if_exists='replace', index = False)
+            db.close()
 
         print("{} Парсинг завершен успешно".format(datetime.now()))
     
