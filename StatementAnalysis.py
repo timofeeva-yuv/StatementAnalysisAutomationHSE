@@ -41,7 +41,7 @@ class StatementAnalysis(object):
     
     def get(self, cmd):
         result = []
-        db =  self.conn.cursor()
+        db = self.conn.cursor()
         if cmd == "Неуспевающие":
             res = db.execute('SELECT ID, Name, CAST(SUM("0" + "1" + "2" + "3") AS real) / CAST(MarkCount AS real) AS "Доля неудов" FROM students GROUP BY ID, Name ORDER BY "Доля неудов" DESC')
             result = res.fetchall()
