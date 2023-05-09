@@ -10,10 +10,10 @@ from .utils import generate_chart_tuple
 def index(request):
     if not request.user.is_authenticated:
         return HttpResponseRedirect('/login')
+    return HttpResponseRedirect('/sandbox')
     data = pd.read_csv('../data/2023-04-10_20:31:34/root.csv', sep=';')
     dashboard, _ = Dashboard.objects.get_or_create(
         author_id=request.user.id,
-        main=True,
         defaults={"name": "General information"}
     )
 

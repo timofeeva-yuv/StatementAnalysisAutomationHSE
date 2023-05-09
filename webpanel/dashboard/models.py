@@ -9,14 +9,14 @@ class Dashboard(models.Model):
 
 class Chart(models.Model):
     AVAILABLE_TYPES = (
+        ('distribution-chart.html', 'Distribution bar chart'),
+        ('doughnut-distribution-chart.html', 'Distribution pie chart'),
         ('bar-chart.html', 'Bar chart'),
-        ('line-chart.html', 'Line chart'),
-        ('scatter-chart.html', 'Scatter chart'),
         ('doughnut-chart.html', 'Doughnut chart'),
     )
     dashboard = models.ForeignKey("Dashboard", on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
-    chart_type = models.CharField(max_length=30, choices=AVAILABLE_TYPES, default='line')
+    chart_type = models.CharField(max_length=50, choices=AVAILABLE_TYPES)
     # TODO: chart_const_params
     chart_labels = models.TextField(blank=True)
     chart_values = models.TextField(blank=True)
