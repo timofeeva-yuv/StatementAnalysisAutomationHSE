@@ -1,2 +1,12 @@
 .ipynb_checkpoints
 */.ipynb_checkpoints
+*.xml
+*.iml
+.idea/
+*.pyc
+*.ipynb
+db.sqlite3
+migrations/
+client/client.json
+.DS_Store
+README.md

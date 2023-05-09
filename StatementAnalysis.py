@@ -41,7 +41,7 @@ class StatementAnalysis(object):
     
     def get(self, cmd):
         result = []
-        db =  self.conn.cursor()
+        db = self.conn.cursor()
         if cmd == "Неуспевающие":
             res = db.execute('SELECT ID, Name, CAST(SUM("0" + "1" + "2" + "3") AS real) / CAST(MarkCount AS real) AS "Доля неудов" FROM students GROUP BY ID, Name ORDER BY "Доля неудов" DESC')
             result = res.fetchall()
@@ -125,13 +125,13 @@ class StatementAnalysis(object):
             for i in tqdm(range(START_ROW - 1, len(values))):
                 col = self.config["ATTR_COLUMNS"]
 
-                level = remove_special_symbols(values[i][col["LEVEL"]])
-                program = remove_special_symbols(values[i][col["PROGRAM"]])
+                level = self.remove_special_symbols(values[i][col["LEVEL"]])
+                program = self.remove_special_symbols(values[i][col["PROGRAM"]])
                 year = int(values[i][col["YEAR"]])
-                module = remove_special_symbols(values[i][col["MODULE"]])
-                discipline = remove_special_symbols(values[i][col["DISCIPLINE"]])
-                teacher = remove_special_symbols(values[i][col["TEACHER"]])
-                text = remove_special_symbols(values[i][col["URL"]])
+                module = self.remove_special_symbols(values[i][col["MODULE"]])
+                discipline = self.remove_special_symbols(values[i][col["DISCIPLINE"]])
+                teacher = self.remove_special_symbols(values[i][col["TEACHER"]])
+                text = self.remove_special_symbols(values[i][col["URL"]])
 
                 data = {"Level": level, "Program": program, "Year": year, "Module": module, "Discipline": discipline, "Teacher": teacher, "Row": i + 1, "Text": text}
                 url_found = False

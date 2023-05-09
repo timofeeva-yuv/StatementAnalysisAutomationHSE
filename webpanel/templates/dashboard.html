@@ -1,0 +1,16 @@
+<style>
+    .chart-container {
+  overflow: hidden;
+  width: 40vw;
+}
+</style>
+
+{% for chart_type, chart_id, labels, values in charts %}
+    <div class="chart-container">
+        <canvas id="{{ chart_id }}"></canvas>
+    </div>
+{% endfor %}
+
+{% for chart_type, chart_id, labels, values in charts %}
+    {% include chart_type with chart_id=chart_id %}
+{% endfor %}
