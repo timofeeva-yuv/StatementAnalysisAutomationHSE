@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Песочница</title>
+</head>
+<body>
+    <input type="button" onclick="history.back();" value="Назад"/>
+    <p>Адрес таблицы с ведомостями: {{ root_table_url }}</p>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        {% if error %}
+            <p style="color: red">{{ error }}</p>
+        {% endif %}
+        <button type="submit">Далее</button>
+    </form>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<style>
+    .chart-container {
+  overflow: hidden;
+  width: 40vw;
+}
+</style>
+
+<head>
+    <script type='text/javascript'>
+        function addFilter(){
+            var container = document.getElementById("filters_container");
+            var input = document.createElement("input");
+            input.type = "text";
+            container.appendChild(input);
+            container.appendChild(document.createElement("br"));
+        }
+    </script>
+    <title>Песочница</title>
+</head>
+<body>
+    <input type="button" onclick="history.back();" value="Назад"/>
+    <p>Адрес таблицы с ведомостями: {{ root_table_url }}</p>
+    <p>Тип графика: {{ chart_type_name }}</p>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <p>Дополнительные фильтры:</p>
+        <button type="button" onclick="addFilter()">Добавить фильтр</button>
+        <div id="filters_container">
+            {% for filter in filters %}
+                <input type="text" value="{{ filter }}"><br>
+            {% endfor %}
+        </div>
+
+        {% if error %}
+            <p style="color: red">{{ error }}</p>
+        {% endif %}
+        <button type="submit">Далее</button>
+    </form>
+
+    {% if chart_id %}
+        <div class="chart-container">
+            <canvas id="{{ chart_id }}"></canvas>
+        </div>
+
+        {% include chart_type with chart_id=chart_id %}
+    {% endif %}
+</body>
+</html>

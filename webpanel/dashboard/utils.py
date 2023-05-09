@@ -1,5 +1,3 @@
-
-
 def generate_chart_tuple(chart, data):
     labels = chart.chart_labels.split('@')
     values = exec(chart.chart_values)
