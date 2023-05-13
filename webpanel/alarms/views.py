@@ -1,4 +1,5 @@
 from django.shortcuts import render
+import pandas as pd
 from django.http import HttpResponseRedirect, HttpResponse
 import sys
 import os
@@ -18,9 +19,33 @@ def index(request):
         return HttpResponseRedirect('/login')
     if request.session.get('root_table_url', 'n/a') == 'n/a':
         return HttpResponseRedirect('/')
+    return render(request, 'alarms_base.html')
+
+
+def unsuccessful(request):
+    global data
+    if not request.user.is_authenticated:
+        return HttpResponseRedirect('/login')
+    if request.session.get('root_table_url', 'n/a') == 'n/a':
+        return HttpResponseRedirect('/')
     if data is None:
         os.chdir(data_path)
         data = StatementAnalysis(request.session['root_table_url'], upd=False)
         os.chdir(current_path)
-    return HttpResponse(data.get(alarm_types[0]))
+    results = pd.DataFrame(data.get('Неуспевающие'), columns=['ID', 'Имя студента',
+                                                              'Доля неудов среди всех оценок студента'])
+    return HttpResponse(results.to_html(index=False))
 
+
+def overstatement(request):
+    global data
+    if not request.user.is_authenticated:
+        return HttpResponseRedirect('/login')
+    if request.session.get('root_table_url', 'n/a') == 'n/a':
+        return HttpResponseRedirect('/')
+    if data is None:
+        os.chdir(data_path)
+        data = StatementAnalysis(request.session['root_table_url'], upd=False)
+        os.chdir(current_path)
+    results = pd.DataFrame(data.get('Завышение'))
+    return HttpResponse(results.to_html(index=False))
