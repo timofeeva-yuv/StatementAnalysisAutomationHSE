@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'dashboard.apps.DashboardConfig',
     'django_extensions',
     'navigation',
+    'manage_hints',
 ]
 
 MIDDLEWARE = [

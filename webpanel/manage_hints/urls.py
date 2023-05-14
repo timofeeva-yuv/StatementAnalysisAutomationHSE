@@ -15,13 +15,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from .views import get_hints
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', include('login.urls')),
-    path('login/', include('login.urls')),
-    path('dashboard/', include('dashboard.urls')),
-    path('sandbox/', include('sandbox.urls')),
-    path('alarms/', include('alarms.urls')),
-    path('get-hints/', include('manage_hints.urls'))
+    path('', get_hints),
 ]

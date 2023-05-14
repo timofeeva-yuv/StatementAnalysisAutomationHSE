@@ -8,7 +8,7 @@ import os
 import logging
 import numpy as np
 sys.path.append('..')
-from sandbox.utils import scale_transform
+from .utils import scale_transform, ultimate_text_to_field
 from StatementAnalysis import StatementAnalysis
 
 
@@ -179,6 +179,7 @@ def create_chart(request):
                 distribution_source = form.cleaned_data['distribution_source']
                 database_table = form.cleaned_data['database_table']
                 distribution_scale = form.cleaned_data['distribution_scale']
+                database_filters = form.cleaned_data['database_filters']
                 chart_type = form.cleaned_data['chart_type']
                 name = form.cleaned_data['name']
                 if distribution_source == "Mark":
@@ -186,6 +187,14 @@ def create_chart(request):
                     values = [0] * 11
                     for source in labels:
                         sql_command = f'SELECT "{source}" FROM {database_table}'
+                        if database_filters is not None and not database_filters.isspace() and database_filters != '':
+                            sql_command += " WHERE "
+                            for elem in database_filters.split():
+                                left = int(elem[0] == '(')
+                                right = int(elem[-1] == ')')
+                                sql_command += ' ' + left * '(' + \
+                                               ultimate_text_to_field[database_table].get(elem.lower(), elem) + \
+                                               right * ')' + ' '
                         sql_command += ';'
                         db = data.conn.cursor()
                         res = db.execute(sql_command)
@@ -196,6 +205,14 @@ def create_chart(request):
                         values[source] = np.sum(result)
                 else:
                     sql_command = f"SELECT {distribution_source} FROM {database_table}"
+                    if database_filters is not None and not database_filters.isspace() and database_filters != '':
+                        sql_command += " WHERE "
+                        for elem in database_filters.split():
+                            left = int(elem[0] == '(')
+                            right = int(elem[-1] == ')')
+                            sql_command += ' ' + left * '(' + \
+                                           ultimate_text_to_field[database_table].get(elem.lower(), elem) + \
+                                           right * ')' + ' '
                     sql_command += ';'
                     db = data.conn.cursor()
                     res = db.execute(sql_command)
@@ -223,7 +240,8 @@ def create_chart(request):
                               chart_values=str(values),
                               distribution_source=distribution_source,
                               database_table=database_table,
-                              distribution_scale=distribution_scale)
+                              distribution_scale=distribution_scale,
+                              database_filters=database_filters)
                 if 'build' in request.POST:
                     chart.id = 1
                     return render(request, 'create_graph.html', {'form': form,
@@ -302,6 +320,7 @@ def edit_chart(request):
                 distribution_source = form.cleaned_data['distribution_source']
                 database_table = form.cleaned_data['database_table']
                 distribution_scale = form.cleaned_data['distribution_scale']
+                database_filters = form.cleaned_data['database_filters']
                 chart_type = form.cleaned_data['chart_type']
                 name = form.cleaned_data['name']
                 if distribution_source == "Mark":
@@ -309,6 +328,14 @@ def edit_chart(request):
                     values = [0] * 11
                     for source in labels:
                         sql_command = f'SELECT "{source}" FROM {database_table}'
+                        if database_filters is not None and not database_filters.isspace() and database_filters != '':
+                            sql_command += " WHERE "
+                            for elem in database_filters.split():
+                                left = int(elem[0] == '(')
+                                right = int(elem[-1] == ')')
+                                sql_command += ' ' + left * '(' + \
+                                               ultimate_text_to_field[database_table].get(elem.lower(), elem) + \
+                                               right * ')' + ' '
                         sql_command += ';'
                         db = data.conn.cursor()
                         res = db.execute(sql_command)
@@ -319,6 +346,14 @@ def edit_chart(request):
                         values[source] = np.sum(result)
                 else:
                     sql_command = f"SELECT {distribution_source} FROM {database_table}"
+                    if database_filters is not None and not database_filters.isspace() and database_filters != '':
+                        sql_command += " WHERE "
+                        for elem in database_filters.split():
+                            left = int(elem[0] == '(')
+                            right = int(elem[-1] == ')')
+                            sql_command += ' ' + left * '(' + \
+                                           ultimate_text_to_field[database_table].get(elem.lower(), elem) + \
+                                           right * ')' + ' '
                     sql_command += ';'
                     db = data.conn.cursor()
                     res = db.execute(sql_command)
@@ -347,7 +382,8 @@ def edit_chart(request):
                               chart_values=str(values),
                               distribution_source=distribution_source,
                               database_table=database_table,
-                              distribution_scale=distribution_scale)
+                              distribution_scale=distribution_scale,
+                              database_filters=database_filters)
                 if 'build' in request.POST:
                     return render(request, 'create_graph.html', {'form': form,
                                                                  'chart': chart,
@@ -381,6 +417,7 @@ def edit_chart(request):
         distribution_source = chart.distribution_source
         database_table = chart.database_table
         distribution_scale = chart.distribution_scale
+        database_filters = chart.database_filters
         chart_type = chart.chart_type
         name = chart.name
         if distribution_source == "Mark":
@@ -388,6 +425,14 @@ def edit_chart(request):
             values = [0] * 11
             for source in labels:
                 sql_command = f'SELECT "{source}" FROM {database_table}'
+                if database_filters is not None and not database_filters.isspace() and database_filters != '':
+                    sql_command += " WHERE "
+                    for elem in database_filters.split():
+                        left = int(elem[0] == '(')
+                        right = int(elem[-1] == ')')
+                        sql_command += ' ' + left * '(' + \
+                                       ultimate_text_to_field[database_table].get(elem.lower(), elem) + \
+                                       right * ')' + ' '
                 sql_command += ';'
                 db = data.conn.cursor()
                 res = db.execute(sql_command)
@@ -398,6 +443,14 @@ def edit_chart(request):
                 values[source] = np.sum(result)
         else:
             sql_command = f"SELECT {distribution_source} FROM {database_table}"
+            if database_filters is not None and not database_filters.isspace() and database_filters != '':
+                sql_command += " WHERE "
+                for elem in database_filters.split():
+                    left = int(elem[0] == '(')
+                    right = int(elem[-1] == ')')
+                    sql_command += ' ' + left * '(' + \
+                                   ultimate_text_to_field[database_table].get(elem.lower(), elem) + \
+                                   right * ')' + ' '
             sql_command += ';'
             db = data.conn.cursor()
             res = db.execute(sql_command)
@@ -426,7 +479,8 @@ def edit_chart(request):
                       chart_values=str(values),
                       distribution_source=distribution_source,
                       database_table=database_table,
-                      distribution_scale=distribution_scale)
+                      distribution_scale=distribution_scale,
+                      database_filters=database_filters)
     return render(request, 'change_graph.html', {'form': form,
                                                  'chart': chart,
                                                  'error': error})

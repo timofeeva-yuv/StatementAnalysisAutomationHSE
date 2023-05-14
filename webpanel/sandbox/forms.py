@@ -27,4 +27,8 @@ class DistributionChartForm(forms.Form):
     distribution_source = forms.ChoiceField(choices=AVAILABLE_SOURCES, label='Распределение')
     database_table = forms.ChoiceField(choices=AVAILABLE_TABLES, label='По')
     distribution_scale = forms.ChoiceField(choices=AVAILABLE_INTERVALS, label='Шкала')
-    # database_filters = forms.CharField(max_length=256, label='Дополнительные фильтры', required=False)
+    database_filters = forms.CharField(widget=forms.Textarea, label='Дополнительные фильтры', required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['database_filters'].widget.attrs.update({'id': 'input-field'})

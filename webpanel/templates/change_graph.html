@@ -9,6 +9,8 @@
         width: 40vw;
     }
     </style>
+    {% load static %}
+    <script src="{% static 'hints.js' %}"></script>
 </head>
 <body>
 {% include 'navigation.html' %}
@@ -16,6 +18,12 @@
 <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
+
+<div id="filters_container">
+            {{ form.input_field }}
+            <div id="hints-container"></div>
+            <br>
+        </div>
 
         {% if error %}
             <p style="color: red">{{ error }}</p>

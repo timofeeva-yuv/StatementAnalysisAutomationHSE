@@ -31,5 +31,6 @@ class Chart(models.Model):
     distribution_source = models.CharField(max_length=100, choices=AVAILABLE_SOURCES, default='Mark')
     database_table = models.CharField(max_length=100, choices=AVAILABLE_TABLES, default='root')
     distribution_scale = models.CharField(max_length=100, choices=AVAILABLE_INTERVALS, default='10')
+    database_filters = models.TextField(blank=True)
     chart_labels = models.TextField(blank=True)
     chart_values = models.TextField(blank=True)

@@ -12,11 +12,17 @@ class DashboardForm(ModelForm):
 class ChartForm(ModelForm):
     class Meta:
         model = Chart
-        fields = ['name', 'chart_type', 'distribution_source', 'database_table', 'distribution_scale']
+        fields = ['name', 'chart_type', 'distribution_source', 'database_table', 'distribution_scale',
+                  'database_filters']
         labels = {'name': 'Название',
                   'chart_type': 'Тип графика',
                   'distribution_source': 'Распределение',
                   'database_table': 'По',
-                  'distribution_scale': 'Шкала'}
+                  'distribution_scale': 'Шкала',
+                  'database_filters': 'Дополнительные фильтры'}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['database_filters'].widget.attrs.update({'id': 'input-field'})
 
 

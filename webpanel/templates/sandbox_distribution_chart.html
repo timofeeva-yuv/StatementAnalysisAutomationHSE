@@ -9,15 +9,8 @@
 </style>
 
 <head>
-    <script type='text/javascript'>
-        function addFilter(){
-            var container = document.getElementById("filters_container");
-            var input = document.createElement("input");
-            input.type = "text";
-            container.appendChild(input);
-            container.appendChild(document.createElement("br"));
-        }
-    </script>
+    {% load static %}
+    <script src="{% static 'hints.js' %}"></script>
     <title>Песочница</title>
 </head>
 <body>
@@ -29,12 +22,10 @@
         {% csrf_token %}
         {{ form.as_p }}
 
-        <p>Дополнительные фильтры:</p>
-        <button type="button" onclick="addFilter()">Добавить фильтр</button>
         <div id="filters_container">
-            {% for filter in filters %}
-                <input type="text" value="{{ filter }}"><br>
-            {% endfor %}
+            {{ form.input_field }}
+            <div id="hints-container"></div>
+            <br>
         </div>
 
         {% if error %}

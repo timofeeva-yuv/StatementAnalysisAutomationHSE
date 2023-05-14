@@ -1,9 +1,7 @@
-import os
-
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect, HttpResponse
 from .forms import SelectTypeForm, DistributionChartForm
-from .utils import scale_transform
+from .utils import scale_transform, ultimate_text_to_field
 import sys
 import os
 import logging
@@ -77,14 +75,20 @@ def distribution_chart(request):
                 distribution_source = form.cleaned_data['distribution_source']
                 database_table = form.cleaned_data['database_table']
                 distribution_scale = form.cleaned_data['distribution_scale']
-                # database_filters = form.cleaned_data['database_filters']
+                database_filters = form.cleaned_data['database_filters']
                 if distribution_source == "Mark":
                     labels = [i for i in range(11)]
                     values = [0] * 11
                     for source in labels:
                         sql_command = f'SELECT "{source}" FROM {database_table}'
-                        # if database_filters is not None and not database_filters.isspace() and database_filters != '':
-                        #     sql_command += f" WHERE {database_filters}"
+                        if database_filters is not None and not database_filters.isspace() and database_filters != '':
+                            sql_command += " WHERE "
+                            for elem in database_filters.split():
+                                left = int(elem[0] == '(')
+                                right = int(elem[-1] == ')')
+                                sql_command += ' ' + left * '(' + \
+                                               ultimate_text_to_field[database_table].get(elem.lower(), elem) + \
+                                               right * ')' + ' '
                         sql_command += ';'
                         db = data.conn.cursor()
                         res = db.execute(sql_command)
@@ -95,8 +99,14 @@ def distribution_chart(request):
                         values[source] = np.sum(result)
                 else:
                     sql_command = f"SELECT {distribution_source} FROM {database_table}"
-                    # if database_filters is not None and not database_filters.isspace() and database_filters != '':
-                    #     sql_command += f" WHERE {database_filters}"
+                    if database_filters is not None and not database_filters.isspace() and database_filters != '':
+                        sql_command += " WHERE "
+                        for elem in database_filters.split():
+                            left = int(elem[0] == '(')
+                            right = int(elem[-1] == ')')
+                            sql_command += ' ' + left * '(' + \
+                                           ultimate_text_to_field[database_table].get(elem.lower(), elem) + \
+                                           right * ')' + ' '
                     sql_command += ';'
                     db = data.conn.cursor()
                     res = db.execute(sql_command)
@@ -160,14 +170,20 @@ def distribution_doughnut_chart(request):
                 distribution_source = form.cleaned_data['distribution_source']
                 database_table = form.cleaned_data['database_table']
                 distribution_scale = form.cleaned_data['distribution_scale']
-                # database_filters = form.cleaned_data['database_filters']
+                database_filters = form.cleaned_data['database_filters']
                 if distribution_source == "Mark":
                     labels = [i for i in range(11)]
                     values = [0] * 11
                     for source in labels:
                         sql_command = f'SELECT "{source}" FROM {database_table}'
-                        # if database_filters is not None and not database_filters.isspace() and database_filters != '':
-                        #     sql_command += f" WHERE {database_filters}"
+                        if database_filters is not None and not database_filters.isspace() and database_filters != '':
+                            sql_command += " WHERE "
+                            for elem in database_filters.split():
+                                left = int(elem[0] == '(')
+                                right = int(elem[-1] == ')')
+                                sql_command += ' ' + left * '(' + \
+                                               ultimate_text_to_field[database_table].get(elem.lower(), elem) + \
+                                               right * ')' + ' '
                         sql_command += ';'
                         db = data.conn.cursor()
                         res = db.execute(sql_command)
@@ -178,8 +194,14 @@ def distribution_doughnut_chart(request):
                         values[source] = np.sum(result)
                 else:
                     sql_command = f"SELECT {distribution_source} FROM {database_table}"
-                    # if database_filters is not None and not database_filters.isspace() and database_filters != '':
-                    #     sql_command += f" WHERE {database_filters}"
+                    if database_filters is not None and not database_filters.isspace() and database_filters != '':
+                        sql_command += " WHERE "
+                        for elem in database_filters.split():
+                            left = int(elem[0] == '(')
+                            right = int(elem[-1] == ')')
+                            sql_command += ' ' + left * '(' + \
+                                           ultimate_text_to_field[database_table].get(elem.lower(), elem) + \
+                                           right * ')' + ' '
                     sql_command += ';'
                     db = data.conn.cursor()
                     res = db.execute(sql_command)
