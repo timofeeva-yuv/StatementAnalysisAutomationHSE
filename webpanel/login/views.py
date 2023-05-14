@@ -26,6 +26,7 @@ def index(request):
                         StatementAnalysis(root_table_field, upd=False)
                         os.chdir(current_path)
                         request.session['root_table_url'] = root_table_field
+                        return render(request, 'blank.html', {'title': 'Главная страница', 'content': ''})
                     except Exception as e:
                         logging.debug(f"Unable to create StatementAnalysis instance with given url. Error: {str(e)}")
                         error = "Неправильный адрес таблицы с ведомостями"

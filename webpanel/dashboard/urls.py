@@ -15,8 +15,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from .views import index
+from .views import index, create_dashboard, dashboard_details, delete_dashboard, rename_dashboard,\
+    create_chart, edit_chart, delete_chart
 
 urlpatterns = [
-    path('', index),
+    path('', index, name='main'),
+    path('create/', create_dashboard, name='create'),
+    path('details/', dashboard_details, name='details'),
+    path('delete/', delete_dashboard, name='delete'),
+    path('rename/', rename_dashboard, name='rename'),
+    path('create-chart/', create_chart, name='create_chart'),
+    path('edit-chart/', edit_chart, name='edit_chart'),
+    path('delete-chart/', delete_chart, name='delete_chart'),
 ]

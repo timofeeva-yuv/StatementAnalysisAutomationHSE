@@ -4,6 +4,7 @@
     <title>Песочница</title>
 </head>
 <body>
+{% include 'navigation.html' %}
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}

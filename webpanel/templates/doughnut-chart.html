@@ -1,19 +1,19 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-  const ctx_doughnut_{{ chart_id }} = document.getElementById('{{ chart_id }}');
-  const data_doughnut_{{ chart_id }} = {
-    labels: {{ labels|safe }},
+  const ctx_doughnut_{{ chart.id }} = document.getElementById('canvas_{{ chart.id }}');
+  const data_doughnut_{{ chart.id }} = {
+    labels: {{ chart.chart_labels|safe }},
     datasets: [{
-      {#label: 'urls',#}
-      data: {{ values|safe }},
+      label: 'Количество оценок',
+      data: {{ chart.chart_values|safe }},
       {#backgroundColor: {{ doughnut_colors|safe }},#}
       borderWidth: 1
     }]
   };
 
-  new Chart(ctx_doughnut_{{ chart_id }}, {
+  new Chart(ctx_doughnut_{{ chart.id }}, {
     type: 'doughnut',
-    data: data_doughnut_{{ chart_id }}
+    data: data_doughnut_{{ chart.id }}
   });
 </script>

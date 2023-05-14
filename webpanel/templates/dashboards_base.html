@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Дэшборды</title>
+</head>
+<body>
+{% include 'navigation.html' %}
+
+<input type="button" onclick="location.href='/dashboard/create';" value="Создать дэшборд"/>
+<br>
+
+{% for dashboard in user_dashboards %}
+    <a href="details?id={{ dashboard.id }}">{{ dashboard.name }}</a><br>
+{% endfor %}
+</body>
+</html>

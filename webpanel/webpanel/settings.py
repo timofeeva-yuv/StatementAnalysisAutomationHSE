@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'login.apps.LoginConfig',
     'dashboard.apps.DashboardConfig',
-    'django_extensions'
+    'django_extensions',
+    'navigation',
 ]
 
 MIDDLEWARE = [

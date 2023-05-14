@@ -40,6 +40,7 @@ def select_type(request):
     if root_table_url is None or data is None:
         return redirect('input_url')
     error = ''
+    form = None
     if request.method == 'POST':
         form = SelectTypeForm(request.POST)
         if form.is_valid():
@@ -48,7 +49,8 @@ def select_type(request):
             return redirect(chart_type_name)
         else:
             error = "Неправильный тип графика"
-    form = SelectTypeForm()
+    if form is None:
+        form = SelectTypeForm()
     return render(request, 'sandbox_template_2.html', {'form': form,
                                                        'root_table_url': root_table_url,
                                                        'error': error})
@@ -67,6 +69,7 @@ def distribution_chart(request):
     if chart_type_name is None or chart_type_name != "distribution_chart":
         return redirect('select_type')
     error = ''
+    form = None
     if request.method == 'POST':
         form = DistributionChartForm(request.POST)
         if form.is_valid():
@@ -128,7 +131,8 @@ def distribution_chart(request):
                 error = "Невозможно построить такой график"
         else:
             error = 'Невозможно построить такой график'
-    form = DistributionChartForm()
+    if form is None:
+        form = DistributionChartForm()
     return render(request, 'sandbox_distribution_chart.html', {'form': form,
                                                                'root_table_url': root_table_url,
                                                                'chart_type_name': SelectTypeForm.types_dict[chart_type_name], # noqa
@@ -148,6 +152,7 @@ def distribution_doughnut_chart(request):
     if chart_type_name is None or chart_type_name != "distribution_doughnut_chart":
         return redirect('select_type')
     error = ''
+    form = None
     if request.method == 'POST':
         form = DistributionChartForm(request.POST)
         if form.is_valid():
@@ -210,7 +215,8 @@ def distribution_doughnut_chart(request):
                 error = "Невозможно построить такой график"
         else:
             error = 'Невозможно построить такой график'
-    form = DistributionChartForm()
+    if form is None:
+        form = DistributionChartForm()
     return render(request, 'sandbox_distribution_chart.html', {'form': form,
                                                                'root_table_url': root_table_url,
                                                                'chart_type_name': SelectTypeForm.types_dict[

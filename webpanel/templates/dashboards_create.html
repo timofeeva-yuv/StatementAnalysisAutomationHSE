@@ -1,19 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Песочница</title>
+    <meta charset="UTF-8">
+    <title>Создать дэшборд</title>
 </head>
 <body>
 {% include 'navigation.html' %}
-    <p>Адрес таблицы с ведомостями: {{ root_table_url }}</p>
-    <form method="post">
+<form method="post">
         {% csrf_token %}
         {{ form.as_p }}
 
         {% if error %}
             <p style="color: red">{{ error }}</p>
         {% endif %}
-        <button type="submit">Далее</button>
+        <button type="submit">Создать</button>
     </form>
 </body>
 </html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ dashboard.name }}</title>
+    <style>
+    .chart-container {
+        overflow: hidden;
+        width: 40vw;
+        position: relative;
+        border: 1px solid #ccc;
+    }
+    .title {
+         text-align: center;
+        font-size: 24px;
+    }
+    .canvas-title {
+        font-size: 18px;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+    .deleteCanvas {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        width: 24px;
+        height: 24px;
+        background-color: transparent;
+        border: none;
+        cursor: pointer;
+        font-size: 18px;
+        color: red;
+    }
+    .changeCanvas {
+        transform: scaleX(-1);
+        position: absolute;
+        top: 5px;
+        right: 35px;
+        width: 24px;
+        height: 24px;
+        background-color: transparent;
+        border: none;
+        cursor: pointer;
+        font-size: 18px;
+        color: blue;
+    }
+    </style>
+</head>
+<body>
+{% include 'navigation.html' %}
+
+<h1 class="title">{{ dashboard.name }}</h1>
+
+<input type="button" onclick="if (confirm('Вы уверены, что хотите удалить дэшборд {{ dashboard.name }}?'))
+    location.href='/dashboard/delete?id={{ dashboard.id }}';" value="Удалить дэшборд"/>
+<br>
+<input type="button" onclick="location.href='/dashboard/rename?id={{ dashboard.id }}';" value="Переименовать дэшборд"/>
+<br>
+<input type="button" onclick="location.href='/dashboard/create-chart?id={{ dashboard.id }}';" value="Добавить график"/>
+<br>
+
+{% for chart in charts %}
+    <div class="chart-container">
+    <h1 class="canvas-title">{{ chart.name }}</h1>
+        <canvas id="canvas_{{ chart.id }}"></canvas>
+
+        <button class="deleteCanvas" id="deleteCanvas_{{ chart.id }}"
+                onclick="if (confirm('Вы уверены, что хотите удалить график {{ chart.name }}?'))
+    location.href='/dashboard/delete-chart?id={{ dashboard.id }}&chart-id={{ chart.id }}';">&#x2716;</button>
+        <button class="changeCanvas" id="changeCanvas_{{ chart.id }}"
+                onclick="location.href='/dashboard/edit-chart?id={{ dashboard.id }}&chart-id={{ chart.id }}';">&#9998;
+        </button>
+    </div>
+{% endfor %}
+
+{% for chart in charts %}
+    {% include chart.chart_type %}
+{% endfor %}
+</body>
+</html>

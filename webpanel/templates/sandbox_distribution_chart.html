@@ -21,7 +21,8 @@
     <title>Песочница</title>
 </head>
 <body>
-    <input type="button" onclick="history.back();" value="Назад"/>
+{% include 'navigation.html' %}
+    <input type="button" onclick="location.href='/sandbox/type';" value="Назад"/>
     <p>Адрес таблицы с ведомостями: {{ root_table_url }}</p>
     <p>Тип графика: {{ chart_type_name }}</p>
     <form method="post">

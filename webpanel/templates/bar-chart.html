@@ -1,19 +1,19 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-  const ctx_bar_{{ chart_id }} = document.getElementById('{{ chart_id }}');
-  const data_bar_{{ chart_id }} = {
-    labels: {{ labels|safe }},
+  const ctx_bar_{{ chart.id }} = document.getElementById('canvas_{{ chart.id }}');
+  const data_bar_{{ chart.id }} = {
+    labels: {{ chart.chart_labels|safe }},
     datasets: [{
-      {#label: 'Errors',#}
-      data: {{ values|safe }},
+      label: 'Количество оценок',
+      data: {{ chart.chart_values|safe }},
       {#backgroundColor: '{{ bar_color|safe }}'#}
     }]
   };
 
-  new Chart(ctx_bar_{{ chart_id }}, {
+  new Chart(ctx_bar_{{ chart.id }}, {
     type: 'bar',
-    data: data_bar_{{ chart_id }},
+    data: data_bar_{{ chart.id }},
     options: {
       scales: {
         y: {

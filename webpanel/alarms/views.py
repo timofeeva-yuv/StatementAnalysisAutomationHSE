@@ -34,7 +34,7 @@ def unsuccessful(request):
         os.chdir(current_path)
     results = pd.DataFrame(data.get('Неуспевающие'), columns=['ID', 'Имя студента',
                                                               'Доля неудов среди всех оценок студента'])
-    return HttpResponse(results.to_html(index=False))
+    return render(request, 'blank.html', {'title': 'Неуспевающие', 'content': results.to_html(index=False)})
 
 
 def overstatement(request):
@@ -48,4 +48,4 @@ def overstatement(request):
         data = StatementAnalysis(request.session['root_table_url'], upd=False)
         os.chdir(current_path)
     results = pd.DataFrame(data.get('Завышение'))
-    return HttpResponse(results.to_html(index=False))
+    return render(request, 'blank.html', {'title': 'Завышение', 'content': results.to_html(index=False)})

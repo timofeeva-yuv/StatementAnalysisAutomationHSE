@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Изменить график</title>
+    <style>
+    .chart-container {
+        overflow: hidden;
+        width: 40vw;
+    }
+    </style>
+</head>
+<body>
+{% include 'navigation.html' %}
+
+<form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        {% if error %}
+            <p style="color: red">{{ error }}</p>
+        {% endif %}
+        <button type="submit" name="build">Предпросмотр</button>
+        <button type="submit" name="submit">Изменить</button>
+</form>
+
+{% if chart %}
+    <div class="chart-container">
+        <canvas id="canvas_{{ chart.id }}"></canvas>
+    </div>
+{% endif %}
+
+{% if chart %}
+    {% include chart.chart_type %}
+{% endif %}
+
+</body>
+</html>
