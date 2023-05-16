@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>База данных</title>
+    <style>
+    .chart-container {
+        overflow: hidden;
+        width: 40vw;
+    }
+    </style>
+    {% load static %}
+    <script src="{% static 'hints.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+  // Function to update database_select choices based on database_table value
+  function updateDatabaseSelectChoices() {
+    var tableValue = $('#id_database_table').val();
+    var databaseSelectField = $('#id_database_select');
+
+    if (tableValue === 'root') {
+      databaseSelectField.empty();
+      {% for value, label in root_fields %}
+      databaseSelectField.append($('<option></option>').attr('value', '{{ value }}').text('{{ label }}'));
+      {% endfor %}
+    } else if (tableValue === 'students') {
+      databaseSelectField.empty();
+      {% for value, label in students_fields %}
+      databaseSelectField.append($('<option></option>').attr('value', '{{ value }}').text('{{ label }}'));
+      {% endfor %}
+    } else {
+      databaseSelectField.empty();
+    }
+  }
+
+  // Attach change event handler to database_table field
+  $('#id_database_table').on('change', function() {
+    updateDatabaseSelectChoices();
+  });
+
+  // Initial update of database_select choices on page load
+  updateDatabaseSelectChoices();
+});
+</script>
+</head>
+<body>
+{% include 'navigation.html' %}
+
+<form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+<div id="filters_container">
+            {{ form.input_field }}
+            <div id="hints-container"></div>
+            <br>
+        </div>
+
+        {% if error %}
+            <p style="color: red">{{ error }}</p>
+        {% endif %}
+        <button type="submit" name="submit">Показать</button>
+</form>
+
+{% if table %}
+<div id="table-container">
+{{ table|safe }}
+</div>
+{% endif %}
+
+</body>
+</html>

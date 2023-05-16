@@ -27,4 +27,9 @@ class NavigationConfig(AppConfig):
             url='/dashboard/',
             order=3
         )
+        MenuItem.objects.get_or_create(
+            title='База данных',
+            url='/database/',
+            order=3
+        )
 

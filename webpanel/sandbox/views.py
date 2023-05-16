@@ -19,7 +19,6 @@ def index(request):
     global data
     if not request.user.is_authenticated:
         return HttpResponseRedirect('/login')
-    error = ''
     if request.session.get('root_table_url', 'n/a') != 'n/a':
         os.chdir(data_path)
         data = StatementAnalysis(request.session.get('root_table_url', 'n/a'), upd=False)
@@ -86,9 +85,10 @@ def distribution_chart(request):
                             for elem in database_filters.split():
                                 left = int(elem[0] == '(')
                                 right = int(elem[-1] == ')')
-                                sql_command += ' ' + left * '(' + \
-                                               ultimate_text_to_field[database_table].get(elem.lower(), elem) + \
-                                               right * ')' + ' '
+                                if elem.count(';') == 0:
+                                    sql_command += ' ' + left * '(' + \
+                                                   ultimate_text_to_field[database_table].get(elem.lower(), elem) + \
+                                                   right * ')' + ' '
                         sql_command += ';'
                         db = data.conn.cursor()
                         res = db.execute(sql_command)
@@ -104,9 +104,10 @@ def distribution_chart(request):
                         for elem in database_filters.split():
                             left = int(elem[0] == '(')
                             right = int(elem[-1] == ')')
-                            sql_command += ' ' + left * '(' + \
-                                           ultimate_text_to_field[database_table].get(elem.lower(), elem) + \
-                                           right * ')' + ' '
+                            if elem.count(';') == 0:
+                                sql_command += ' ' + left * '(' + \
+                                               ultimate_text_to_field[database_table].get(elem.lower(), elem) + \
+                                               right * ')' + ' '
                     sql_command += ';'
                     db = data.conn.cursor()
                     res = db.execute(sql_command)
@@ -181,9 +182,10 @@ def distribution_doughnut_chart(request):
                             for elem in database_filters.split():
                                 left = int(elem[0] == '(')
                                 right = int(elem[-1] == ')')
-                                sql_command += ' ' + left * '(' + \
-                                               ultimate_text_to_field[database_table].get(elem.lower(), elem) + \
-                                               right * ')' + ' '
+                                if elem.count(';') == 0:
+                                    sql_command += ' ' + left * '(' + \
+                                                   ultimate_text_to_field[database_table].get(elem.lower(), elem) + \
+                                                   right * ')' + ' '
                         sql_command += ';'
                         db = data.conn.cursor()
                         res = db.execute(sql_command)
@@ -199,9 +201,10 @@ def distribution_doughnut_chart(request):
                         for elem in database_filters.split():
                             left = int(elem[0] == '(')
                             right = int(elem[-1] == ')')
-                            sql_command += ' ' + left * '(' + \
-                                           ultimate_text_to_field[database_table].get(elem.lower(), elem) + \
-                                           right * ')' + ' '
+                            if elem.count(';') == 0:
+                                sql_command += ' ' + left * '(' + \
+                                               ultimate_text_to_field[database_table].get(elem.lower(), elem) + \
+                                               right * ')' + ' '
                     sql_command += ';'
                     db = data.conn.cursor()
                     res = db.execute(sql_command)
