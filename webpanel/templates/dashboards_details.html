@@ -5,11 +5,12 @@
     <title>{{ dashboard.name }}</title>
     <style>
     .chart-container {
+        position: absolute;
         overflow: hidden;
         width: 40vw;
-        position: relative;
         border: 1px solid #ccc;
     }
+
     .title {
          text-align: center;
         font-size: 24px;
@@ -64,34 +65,6 @@
     {% load static %}
     <script src="{% static 'constant_functions.js' %}"></script>
     <script>
-$(document).ready(function() {
-  $(".chart-container").each(function() {
-    var chartContainer = $(this);
-
-    chartContainer.resizable({
-      handles: 'se',
-      stop: function(event, ui) {
-        handleResize(); // Redraw the text on canvas when the container is resized
-        saveChartContainerSize(chartContainer.attr("id"), ui.size.width, ui.size.height);
-      }
-    });
-  });
-
-  $(".chart-container").each(function() {
-    var chartContainer = $(this);
-
-    chartContainer.draggable({
-      stop: function(event, ui) {
-        var chartContainerId = chartContainer.attr('id');
-        var left = ui.position.left;
-        var top = ui.position.top;
-
-        // Call the function to save the chart container position
-        saveChartContainerPosition(chartContainerId, left, top);
-      }
-    });
-  });
-});
 
 // Function to save the chart container size in the Django view
 function saveChartContainerSize(chartContainerId, width, height) {
@@ -187,64 +160,71 @@ function saveChartContainerPosition(chartContainerId, left, top) {
 <br>
 
 {% for chart in charts %}
-{% if chart.chart_type != 'constant.html' %}
-<div class="chart-container" id="container_chart_{{ chart.id }}" data-width="{{ chart.width }}" data-height="{{ chart.height }}">
-<script>
-    var height = {{ chart.height }};
-    var width = {{ chart.width }};
-    var top = {{ chart.top }};
-    var left = {{ chart.left }};
-
-    // Selecting the div element
-    var chartDiv = document.getElementById('container_chart_{{ chart.id }}');
-
-    // Setting the styles using the variables
-    chartDiv.style.height = height + 'px';
-    chartDiv.style.width = width + 'px';
-    chartDiv.style.top = top + 'px';
-    chartDiv.style.left = left + 'px';
-</script>
+<div class="chart-container" id="container_{{ chart.div_type }}_{{ chart.id }}" data-width="{{ chart.width }}" data-height="{{ chart.height }}">
 <h1 class="canvas-title">{{ chart.name }}</h1>
-<canvas class="resizable-canvas" id="canvas_chart_{{ chart.id }}"></canvas>
+<canvas class="resizable-canvas" id="canvas_{{ chart.div_type }}_{{ chart.id }}"></canvas>
 <button class="deleteCanvas" id="deleteCanvas_{{ chart.id }}"
                  onclick="if (confirm('Вы уверены, что хотите удалить график {{ chart.name }}?'))
-                     location.href='/dashboard/delete-chart?id={{ dashboard.id }}&chart-id={{ chart.id }}';">&#x2716;</button>
+                     location.href='/dashboard/delete-{{ chart.div_type }}?id={{ dashboard.id }}&chart-id={{ chart.id }}';">&#x2716;</button>
 <button class="changeCanvas" id="changeCanvas_{{ chart.id }}"
-                 onclick="location.href='/dashboard/edit-chart?id={{ dashboard.id }}&chart-id={{ chart.id }}';">&#9998;
+                 onclick="location.href='/dashboard/edit-{{ chart.div_type }}?id={{ dashboard.id }}&chart-id={{ chart.id }}';">&#9998;
 </button>
 </div>
-{% else %}
-<div class="chart-container" id="container_constant_{{ chart.id }}" data-width="{{ chart.width }}" data-height="{{ chart.height }}">
-<script>
-    var height = {{ chart.height }};
-    var width = {{ chart.width }};
-    var top = {{ chart.top }};
-    var left = {{ chart.left }};
-
-    // Selecting the div element
-    var chartDiv = document.getElementById('container_constant_{{ chart.id }}');
-
-    // Setting the styles using the variables
-    chartDiv.style.height = height + 'px';
-    chartDiv.style.width = width + 'px';
-    chartDiv.style.top = top + 'px';
-    chartDiv.style.left = left + 'px';
-</script>
-<h1 class="canvas-title">{{ chart.name }}</h1>
-<canvas class="resizable-canvas" id="canvas_constant_{{ chart.id }}"></canvas>
-<button class="deleteCanvas" id="deleteCanvas_{{ chart.id }}"
-                 onclick="if (confirm('Вы уверены, что хотите удалить график {{ chart.name }}?'))
-                     location.href='/dashboard/delete-constant?id={{ dashboard.id }}&chart-id={{ chart.id }}';">&#x2716;</button>
-<button class="changeCanvas" id="changeCanvas_{{ chart.id }}"
-                 onclick="location.href='/dashboard/edit-constant?id={{ dashboard.id }}&chart-id={{ chart.id }}';">&#9998;
-</button>
-</div>
-{% endif %}
 {% endfor %}
 
 {% for chart in charts %}
 {% include chart.chart_type %}
 {% endfor %}
+
+<script>
+$(document).ready(function() {
+  {% for chart in charts %}
+    (function() {
+      var chartDiv = $("#container_{{ chart.div_type }}_{{ chart.id }}");
+      var canvas = document.getElementById("canvas_{{ chart.div_type }}_{{ chart.id }}");
+      var height = {{ chart.height }};
+      var width = {{ chart.width }};
+      var top = {{ chart.top }};
+      var left = {{ chart.left }};
+
+      // Set the size and position of the chart container
+      chartDiv.css({
+        'height': height + 'px',
+        'width': width + 'px',
+        'top': top + 'px',
+        'left': left + 'px',
+      });
+
+      chartDiv.resizable({
+        handles: 'se',
+        resize: function(event, ui) {
+            if ("{{ chart.div_type }}" == "constant")
+            {
+                handleResizeOne(canvas, {{ chart.value }}); // Redraw the text on canvas when the container is resized
+            }
+        },
+        stop: function(event, ui) {
+          saveChartContainerSize(chartDiv.attr("id"), ui.size.width, ui.size.height);
+        }
+      });
+
+      chartDiv.draggable({
+        stop: function(event, ui) {
+          var left = ui.position.left;
+          var top = ui.position.top;
+
+          // Call the function to save the chart container position
+          saveChartContainerPosition(chartDiv.attr('id'), left, top);
+        }
+      });
+
+      handleResizeOne(canvas, {{ chart.value }});
+    })();
+  {% endfor %}
+});
+</script>
+
+
 
 
 </body>

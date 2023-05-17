@@ -39,6 +39,7 @@ class Chart(models.Model):
     width = models.FloatField(default=320)
     left = models.FloatField(default=0)
     top = models.FloatField(default=0)
+    div_type = "chart"
 
 
 class Constant(models.Model):
@@ -66,3 +67,4 @@ class Constant(models.Model):
     width = models.FloatField(default=320)
     left = models.FloatField(default=0)
     top = models.FloatField(default=0)
+    div_type = "constant"
