@@ -53,7 +53,10 @@ class StatementAnalysis(object):
         return result
     
     def __del__(self):
-        self.conn.close()
+        try:
+            self.conn.close()
+        except AttributeError:
+            pass
     
         # В SQL-базе вместо поля Group будет GroupNumber (Group - служебное слово)
     def __make_db_attrs(self, table_name):
