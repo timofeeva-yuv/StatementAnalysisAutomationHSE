@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Добавить график</title>
+    <title>Изменить число</title>
     <style>
     .chart-container {
         overflow: hidden;
@@ -29,17 +29,17 @@
             <p style="color: red">{{ error }}</p>
         {% endif %}
         <button type="submit" name="build">Предпросмотр</button>
-        <button type="submit" name="submit">Добавить</button>
+        <button type="submit" name="submit">Изменить</button>
 </form>
 
 {% if chart %}
     <div class="chart-container">
-        <canvas id="canvas_chart_{{ chart.id }}"></canvas>
+        <canvas id="canvas_constant_{{ chart.id }}"></canvas>
     </div>
 {% endif %}
 
 {% if chart %}
-    {% include chart.chart_type %}
+    {% include 'constant.html' %}
 {% endif %}
 
 </body>

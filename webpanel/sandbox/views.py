@@ -1,14 +1,15 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect, HttpResponse
-from .forms import SelectTypeForm, DistributionChartForm
-from .utils import scale_transform, ultimate_text_to_field
+from .forms import SelectTypeForm, DistributionChartForm, ConstantForm
+from .utils import scale_transform, ultimate_text_to_field, ultimate_fields_text, ultimate_field_to_text, \
+    root_fields, students_fields, aggregation_funcs
 import sys
 import os
 import logging
 import numpy as np
+
 sys.path.append('..')
 from StatementAnalysis import StatementAnalysis
-
 
 data = None
 data_path = '..'
@@ -83,6 +84,8 @@ def distribution_chart(request):
                         if database_filters is not None and not database_filters.isspace() and database_filters != '':
                             sql_command += " WHERE "
                             for elem in database_filters.split():
+                                if elem.lower().replace('_', ' ') in ultimate_fields_text[database_table]:
+                                    elem = elem.lower().replace('_', ' ')
                                 left = int(elem[0] == '(')
                                 right = int(elem[-1] == ')')
                                 if elem.count(';') == 0:
@@ -102,6 +105,8 @@ def distribution_chart(request):
                     if database_filters is not None and not database_filters.isspace() and database_filters != '':
                         sql_command += " WHERE "
                         for elem in database_filters.split():
+                            if elem.lower().replace('_', ' ') in ultimate_fields_text[database_table]:
+                                elem = elem.lower().replace('_', ' ')
                             left = int(elem[0] == '(')
                             right = int(elem[-1] == ')')
                             if elem.count(';') == 0:
@@ -130,7 +135,8 @@ def distribution_chart(request):
                         values[scale_transform[i]] += old_values[i]
                 return render(request, 'sandbox_distribution_chart.html', {'form': form,
                                                                            'root_table_url': root_table_url,
-                                                                           'chart_type_name': SelectTypeForm.types_dict[chart_type_name], # noqa
+                                                                           'chart_type_name': SelectTypeForm.types_dict[
+                                                                               chart_type_name],  # noqa
                                                                            'error': error,
                                                                            'chart_type': 'distribution-chart.html',
                                                                            'chart_id': '1',
@@ -146,7 +152,8 @@ def distribution_chart(request):
         form = DistributionChartForm()
     return render(request, 'sandbox_distribution_chart.html', {'form': form,
                                                                'root_table_url': root_table_url,
-                                                               'chart_type_name': SelectTypeForm.types_dict[chart_type_name], # noqa
+                                                               'chart_type_name': SelectTypeForm.types_dict[
+                                                                   chart_type_name],  # noqa
                                                                'error': error})
 
 
@@ -180,6 +187,8 @@ def distribution_doughnut_chart(request):
                         if database_filters is not None and not database_filters.isspace() and database_filters != '':
                             sql_command += " WHERE "
                             for elem in database_filters.split():
+                                if elem.lower().replace('_', ' ') in ultimate_fields_text[database_table]:
+                                    elem = elem.lower().replace('_', ' ')
                                 left = int(elem[0] == '(')
                                 right = int(elem[-1] == ')')
                                 if elem.count(';') == 0:
@@ -199,6 +208,8 @@ def distribution_doughnut_chart(request):
                     if database_filters is not None and not database_filters.isspace() and database_filters != '':
                         sql_command += " WHERE "
                         for elem in database_filters.split():
+                            if elem.lower().replace('_', ' ') in ultimate_fields_text[database_table]:
+                                elem = elem.lower().replace('_', ' ')
                             left = int(elem[0] == '(')
                             right = int(elem[-1] == ')')
                             if elem.count(';') == 0:
@@ -247,3 +258,50 @@ def distribution_doughnut_chart(request):
                                                                'chart_type_name': SelectTypeForm.types_dict[
                                                                    chart_type_name],  # noqa
                                                                'error': error})
+
+
+def constant_chart(request):
+    global data
+    if not request.user.is_authenticated:
+        return HttpResponseRedirect('/login')
+    if request.session.get('root_table_url', 'n/a') == 'n/a':
+        return HttpResponseRedirect('/')
+    if data is None:
+        os.chdir(data_path)
+        data = StatementAnalysis(request.session.get('root_table_url', 'n/a'), upd=False)
+        os.chdir(current_path)
+    error = ''
+    form = None
+    if request.method == 'POST':
+        form = ConstantForm(request.POST)
+        if form.is_valid():
+            database_table = form.cleaned_data['database_table']
+            database_select = form.cleaned_data['database_select']
+            database_filters = form.cleaned_data['database_filters']
+            aggregation = form.cleaned_data['aggregation']
+            sql_command = f"SELECT {database_select} FROM {database_table}"
+            if database_filters is not None and not database_filters.isspace() and database_filters != '':
+                sql_command += " WHERE "
+                for elem in database_filters.split():
+                    if elem.lower().replace('_', ' ') in ultimate_fields_text[database_table]:
+                        elem = elem.lower().replace('_', ' ')
+                    left = int(elem[0] == '(')
+                    right = int(elem[-1] == ')')
+                    if elem.count(';') == 0:
+                        sql_command += ' ' + left * '(' + \
+                                       ultimate_text_to_field[database_table].get(elem.lower(), elem) + \
+                                       right * ')' + ' '
+            sql_command += ';'
+            db = data.conn.cursor()
+            res = db.execute(sql_command)
+            result = np.array(res.fetchall())
+            db.close()
+            result = result[result != np.array(None)]
+            value = aggregation_funcs[aggregation](result)
+            return render(request, 'sandbox_constant.html', {'form': form,
+                                                             'error': error,
+                                                             'value': value})
+    if form is None:
+        form = ConstantForm()
+    return render(request, 'sandbox_constant.html', {'form': form,
+                                                     'error': error})

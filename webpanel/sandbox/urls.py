@@ -15,12 +15,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from .views import index, select_type, distribution_chart, distribution_doughnut_chart
+from .views import index, select_type, distribution_chart, distribution_doughnut_chart, constant_chart
 
 urlpatterns = [
     path('', index, name='input_url'),
     path('type', select_type, name='select_type'),
     path('distribution', distribution_chart, name='distribution_chart'),
     path('distribution-doughnut', distribution_doughnut_chart, name='distribution_doughnut_chart'),
-    path('constant', distribution_chart, name='constant'),
+    path('constant', constant_chart, name='constant'),
 ]

@@ -16,7 +16,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from .views import index, create_dashboard, dashboard_details, delete_dashboard, rename_dashboard,\
-    create_chart, edit_chart, delete_chart
+    create_chart, edit_chart, delete_chart, create_constant, edit_constant, delete_constant,\
+    save_chart_container_size, save_chart_container_position
 
 urlpatterns = [
     path('', index, name='main'),
@@ -25,6 +26,11 @@ urlpatterns = [
     path('delete/', delete_dashboard, name='delete'),
     path('rename/', rename_dashboard, name='rename'),
     path('create-chart/', create_chart, name='create_chart'),
+    path('create-constant/', create_constant, name='create_constant'),
     path('edit-chart/', edit_chart, name='edit_chart'),
+    path('edit-constant/', edit_constant, name='edit_constant'),
     path('delete-chart/', delete_chart, name='delete_chart'),
+    path('delete-constant/', delete_constant, name='delete_constant'),
+    path('save-chart-container-size/', save_chart_container_size, name='save_chart_container_size'),
+    path('save-chart-container-position/', save_chart_container_position, name='save_chart_container_position'),
 ]

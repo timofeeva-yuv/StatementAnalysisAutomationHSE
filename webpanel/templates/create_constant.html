@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Добавить график</title>
+    <title>Добавить число</title>
     <style>
     .chart-container {
         overflow: hidden;
@@ -34,12 +34,12 @@
 
 {% if chart %}
     <div class="chart-container">
-        <canvas id="canvas_chart_{{ chart.id }}"></canvas>
+        <canvas id="canvas_constant_{{ chart.id }}"></canvas>
     </div>
 {% endif %}
 
 {% if chart %}
-    {% include chart.chart_type %}
+    {% include 'constant.html' %}
 {% endif %}
 
 </body>

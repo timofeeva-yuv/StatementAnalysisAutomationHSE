@@ -9,4 +9,3 @@ db.sqlite3
 migrations/
 client/client.json
 .DS_Store
-README.md
