@@ -18,7 +18,7 @@ def index(request):
     if not request.user.is_authenticated:
         return HttpResponseRedirect('/login')
     if request.session.get('root_table_url', 'n/a') == 'n/a':
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect('/settings')
     return render(request, 'alarms_base.html')
 
 
@@ -27,7 +27,7 @@ def unsuccessful(request):
     if not request.user.is_authenticated:
         return HttpResponseRedirect('/login')
     if request.session.get('root_table_url', 'n/a') == 'n/a':
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect('/settings')
     if data is None:
         os.chdir(data_path)
         data = StatementAnalysis(request.session['root_table_url'], upd=False)
@@ -42,7 +42,7 @@ def overstatement(request):
     if not request.user.is_authenticated:
         return HttpResponseRedirect('/login')
     if request.session.get('root_table_url', 'n/a') == 'n/a':
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect('/settings')
     if data is None:
         os.chdir(data_path)
         data = StatementAnalysis(request.session['root_table_url'], upd=False)

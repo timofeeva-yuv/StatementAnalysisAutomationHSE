@@ -23,7 +23,7 @@ def index(request):
     if not request.user.is_authenticated:
         return HttpResponseRedirect('/login')
     if request.session.get('root_table_url', 'n/a') == 'n/a':
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect('/settings')
     user_dashboards = Dashboard.objects.filter(author_id=request.user.id)
     return render(request, 'dashboards_base.html', {'user_dashboards': user_dashboards})
 
@@ -32,7 +32,7 @@ def create_dashboard(request):
     if not request.user.is_authenticated:
         return HttpResponseRedirect('/login')
     if request.session.get('root_table_url', 'n/a') == 'n/a':
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect('/settings')
     error = ''
     form = None
     if request.method == 'POST':
@@ -58,7 +58,7 @@ def dashboard_details(request):
     if not request.user.is_authenticated:
         return HttpResponseRedirect('/login')
     if request.session.get('root_table_url', 'n/a') == 'n/a':
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect('/settings')
     try:
         dashboard_id = request.GET['id']
     except:
@@ -86,7 +86,7 @@ def delete_dashboard(request):
     if not request.user.is_authenticated:
         return HttpResponseRedirect('/login')
     if request.session.get('root_table_url', 'n/a') == 'n/a':
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect('/settings')
     try:
         dashboard_id = request.GET['id']
     except:
@@ -111,7 +111,7 @@ def rename_dashboard(request):
     if not request.user.is_authenticated:
         return HttpResponseRedirect('/login')
     if request.session.get('root_table_url', 'n/a') == 'n/a':
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect('/settings')
     try:
         dashboard_id = request.GET['id']
     except:
@@ -154,7 +154,7 @@ def create_chart(request):
     if not request.user.is_authenticated:
         return HttpResponseRedirect('/login')
     if request.session.get('root_table_url', 'n/a') == 'n/a':
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect('/settings')
     try:
         dashboard_id = request.GET['id']
     except:
@@ -281,7 +281,7 @@ def create_constant(request):
     if not request.user.is_authenticated:
         return HttpResponseRedirect('/login')
     if request.session.get('root_table_url', 'n/a') == 'n/a':
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect('/settings')
     try:
         dashboard_id = request.GET['id']
     except:
@@ -369,7 +369,7 @@ def edit_constant(request):
     if not request.user.is_authenticated:
         return HttpResponseRedirect('/login')
     if request.session.get('root_table_url', 'n/a') == 'n/a':
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect('/settings')
     try:
         dashboard_id = request.GET['id']
     except:
@@ -508,7 +508,7 @@ def edit_chart(request):
     if not request.user.is_authenticated:
         return HttpResponseRedirect('/login')
     if request.session.get('root_table_url', 'n/a') == 'n/a':
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect('/settings')
     try:
         dashboard_id = request.GET['id']
     except:
@@ -726,7 +726,7 @@ def delete_chart(request):
     if not request.user.is_authenticated:
         return HttpResponseRedirect('/login')
     if request.session.get('root_table_url', 'n/a') == 'n/a':
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect('/settings')
     try:
         dashboard_id = request.GET['id']
     except:
@@ -769,7 +769,7 @@ def delete_constant(request):
     if not request.user.is_authenticated:
         return HttpResponseRedirect('/login')
     if request.session.get('root_table_url', 'n/a') == 'n/a':
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect('/settings')
     try:
         dashboard_id = request.GET['id']
     except:

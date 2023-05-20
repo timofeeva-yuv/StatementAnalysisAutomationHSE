@@ -18,8 +18,3 @@ class LoginForm(forms.Form):
     username = forms.CharField(max_length=50)
     password = forms.CharField(max_length=100)
     remember_me = forms.BooleanField()
-
-
-class InputUrlForm(forms.Form):
-    root_table_url = forms.CharField(label='Адрес таблицы с ведомостями', max_length=256,
-                                     initial="https://docs.google.com/spreadsheets/d/1IyfSPiiR0DUxYuConiYzuokM2hUQbOBpuJAeAlGi7kc") # noqa

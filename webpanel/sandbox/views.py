@@ -25,7 +25,7 @@ def index(request):
         data = StatementAnalysis(request.session.get('root_table_url', 'n/a'), upd=False)
         os.chdir(current_path)
         return redirect('select_type')
-    return HttpResponseRedirect('/')
+    return HttpResponseRedirect('/settings')
 
 
 def select_type(request):
@@ -33,7 +33,7 @@ def select_type(request):
     if not request.user.is_authenticated:
         return HttpResponseRedirect('/login')
     if request.session.get('root_table_url', 'n/a') == 'n/a':
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect('/settings')
     root_table_url = request.session.get('root_table_url')
     if root_table_url is None or data is None:
         return redirect('input_url')
@@ -59,7 +59,7 @@ def distribution_chart(request):
     if not request.user.is_authenticated:
         return HttpResponseRedirect('/login')
     if request.session.get('root_table_url', 'n/a') == 'n/a':
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect('/settings')
     root_table_url = request.session.get('root_table_url')
     chart_type_name = request.session.get('chart_type_name')
     if root_table_url is None or data is None:
@@ -162,7 +162,7 @@ def distribution_doughnut_chart(request):
     if not request.user.is_authenticated:
         return HttpResponseRedirect('/login')
     if request.session.get('root_table_url', 'n/a') == 'n/a':
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect('/settings')
     root_table_url = request.session.get('root_table_url')
     chart_type_name = request.session.get('chart_type_name')
     if root_table_url is None or data is None:
@@ -265,7 +265,7 @@ def constant_chart(request):
     if not request.user.is_authenticated:
         return HttpResponseRedirect('/login')
     if request.session.get('root_table_url', 'n/a') == 'n/a':
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect('/settings')
     if data is None:
         os.chdir(data_path)
         data = StatementAnalysis(request.session.get('root_table_url', 'n/a'), upd=False)

@@ -22,7 +22,7 @@ def index(request):
     if not request.user.is_authenticated:
         return HttpResponseRedirect('/login')
     if request.session.get('root_table_url', 'n/a') == 'n/a':
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect('/settings')
     if data is None:
         os.chdir(data_path)
         data = StatementAnalysis(request.session.get('root_table_url', 'n/a'), upd=False)
@@ -60,6 +60,9 @@ def index(request):
             for elem in database_select:
                 cols.append(ultimate_field_to_text[database_table].get(elem, elem))
             df = pd.DataFrame(result, columns=cols)
+            for i in range(len(df)):
+                df.iloc[i]['Имя'] = f"Студент {i + 1}"
+                df.iloc[i]['Группа'] = f"Группа студента {i + 1}"
             return render(request, 'view_database.html', {'form': form,
                                                           'error': error,
                                                           'root_fields': root_fields,

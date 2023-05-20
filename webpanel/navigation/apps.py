@@ -32,4 +32,9 @@ class NavigationConfig(AppConfig):
             url='/database/',
             order=3
         )
+        MenuItem.objects.get_or_create(
+            title='Настройки',
+            url='/settings/',
+            order=3
+        )
 
