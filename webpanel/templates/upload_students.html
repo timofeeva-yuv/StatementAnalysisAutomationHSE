@@ -5,14 +5,15 @@
 </head>
 <body>
 {% include 'navigation.html' %}
-    <form method="post">
+    <p>Адрес таблицы с ведомостями: {{ root_table_url }}</p>
+    <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.as_p }}
 
         {% if error %}
             <p style="color: red">{{ error }}</p>
         {% endif %}
-        <button type="submit">Далее</button>
+        <button type="submit">Загрузить</button>
     </form>
 </body>
 </html>

@@ -7,3 +7,4 @@ tqdm
 django
 django-extensions
 django-q
+openpyxl
