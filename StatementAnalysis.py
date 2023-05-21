@@ -18,8 +18,14 @@ from tqdm import tqdm
 
 
 class StatementAnalysis(object):
+    '''Анализатор ведомостей факультета компьютерных наук НИУ ВШЭ'''
     
     def __init__(self, url, upd=False, student_files=[]):
+        '''Принимает по порядку:
+                url (str) - ссылка на google-таблицу с ведомостями
+                upd (bool) - True, если нужно обновить обработку ранее обработанных ведомостей. По умолчанию - False
+                student_files (list) - список названий excel-файлов со списками студентов. По умолчанию - пустой список
+        '''
         with open("config/config.json", "r") as f:
             self.config = json.load(f)
             
@@ -37,13 +43,25 @@ class StatementAnalysis(object):
         
         self.__parse_statements()
     
-    def __call__(self, url, upd=False):
+    def __call__(self, url, upd=False, student_files=[]):
+        '''Принимает по порядку:
+                url (str) - ссылка на google-таблицу с ведомостями
+                upd (bool) - True, если нужно обновить обработку ранее обработанных ведомостей. По умолчанию - False
+                student_files (list) - список названий excel-файлов со списками студентов. По умолчанию - пустой список
+        '''
+        self.student_files = student_files[:]
+        
         self.root_df = self.__parse_root(url, upd)
-        self.df_students = self.__parse_students_lists()        
+        self.df_students = self.__parse_students_lists()      
+        
         self.__create_db()
+        
         self.__parse_statements()
     
     def get(self, cmd):
+        ''' Принимает cmd (str) - название запроса. Например, "Неуспевающие" или "Завышение".
+            Возвращает результат запроса, который вернула база данных
+        '''
         result = []
         db = self.conn.cursor()
         if cmd == "Неуспевающие":
@@ -51,7 +69,7 @@ class StatementAnalysis(object):
             result = res.fetchall()
             result = result[:int(self.config["FAIL_STUDENTS_TOP"] * len(result))] # 5% по доле неудов
         elif cmd == "Завышение":
-            res = db.execute('SELECT * FROM root WHERE (("10" + "9" + "8") / MarkCount >= {}) AND ("10" / MarkCount >= {})'.format(config["OVERESTIMATION_GREAT_PERCENT"], config["OVERESTIMATION_10_PERCENT"]))
+            res = db.execute('SELECT * FROM root WHERE (("10" + "9" + "8") / MarkCount >= {}) AND ("10" / MarkCount >= {})'.format(self.config["OVERESTIMATION_GREAT_PERCENT"], self.config["OVERESTIMATION_10_PERCENT"]))
             result = res.fetchall()
         db.close()
         return result
@@ -63,9 +81,11 @@ class StatementAnalysis(object):
             pass
         
     def __parse_statements(self):
+        '''Запускает обработку разных видов ведомостей'''
         self.__parse_gsheets()    
     
-    def __create_db(self):        
+    def __create_db(self):    
+        '''Создает внутреннюю базу данных с таблицами root и students'''
         self.conn = connect('{}/database'.format(self.path), check_same_thread=False)
         db = self.conn.cursor()
         
@@ -80,6 +100,12 @@ class StatementAnalysis(object):
         db.close()
         
     def __parse_root(self, url_root_sheet, upd_flg):
+        '''Обрабатывает google-таблицу со списком ведомостей.
+           Принимает по порядку:
+               url_root_sheet (str) - ссылка на google-таблицу с ведомостями
+               upd_flg (bool) - True, если нужно обновить обработку ранее обработанных ведомостей. По умолчанию - False
+           Возвращает pandas.DataFrame с обработанными данными таблицы
+        '''
         gc = pygsheets.authorize(service_file="client/client.json")
         
         url_root_sheet = re.sub(r"/edit(.*)", '', url_root_sheet)
@@ -163,6 +189,9 @@ class StatementAnalysis(object):
         return df_root[:]
     
     def __parse_students_lists(self):
+        ''' Обрабатывает Excel-файлы со списками студентов, размещенные в специальной директории (см. STUDENT_LISTS_INITIAL_PATH в config.json). По умолчанию - в tmp
+            Возвращает pandas.DataFrame с обработанными данными таблицы
+        '''
         if os.path.isfile(self.path + "/students.csv"):
             df_students = pd.read_csv(self.path + "/students.csv", sep=";")
         else:
@@ -193,6 +222,7 @@ class StatementAnalysis(object):
         return df_students[:]
     
     def __parse_gsheets(self):
+        '''Обрабатывает ведомости в формате Google-таблиц'''
         gc = pygsheets.authorize(service_file="client/client.json")
         
         # Начинаем парсить валидные ссылки
@@ -203,7 +233,7 @@ class StatementAnalysis(object):
         for sh_ind in gsh.index:
             sh = gsh.loc[sh_ind]
             id_sheet, url_sheet = sh.ID, sh.URL
-            if len(self.df_root[(self.df_root.URL == url_sheet) & pd.notna(self.df_root.IsParsed)]) > 0:
+            if len(self.df_root[(self.df_root.URL == url_sheet) & (self.df_root.IsParsed == True)]) > 0:
                 tmp = self.df_root[(self.df_root.URL == url_sheet) & pd.notna(self.df_root.IsParsed)]
                 row, ind = tmp.iloc[0], [tmp.index[0]]
                 new_row = self.df_root.loc[ind]
@@ -220,9 +250,9 @@ class StatementAnalysis(object):
                 self.df_root.loc[ind] = new_row
                 self.df_root.to_csv(self.path + "/root.csv", sep=";", header=self.config["ROOT_TABLE_ATTRS"], index=False)
                 if row.IsParsed:
-                    print("{} Ведомость уже обработана и выгружена сюда".format(datetime.now()), row.Path)
+                    print("{} Ведомость по {} уже обработана и выгружена сюда".format(datetime.now(), new_row.Discipline), row.Path)
                 else:
-                    print("{} Ведомость уже пытались обработать, но завершились с ошибкой".format(datetime.now()), row.ErrorName)
+                    print("{} Ведомость по {} уже пытались обработать, но завершились с ошибкой".format(datetime.now(), new_row.Discipline), row.ErrorName)
                 continue
             try:
                 sheet = gc.open_by_url(url_sheet)
@@ -293,7 +323,7 @@ class StatementAnalysis(object):
                             name_cnt += self.__is_name(v[i])
                             group_cnt += self.__is_group_number(v[i], self.group_names)
 
-                            formula_data = self.__is_formula(cells_array[i][j - 1], title, titles)
+                            formula_data = self.__is_formula(cells_array[i][j - 1], titles)
                             mark_cnt += self.__is_mark(v[i]) and not formula_data[0]
                             cnt += 1
                             
@@ -315,7 +345,10 @@ class StatementAnalysis(object):
                                 raise Exception("Single column is parsed to be group and mark column")
 
                     if len(name_cols) == 0 or (len(mark_cols) < self.config["MARK_COUNT_THRESHOLD"]):
-                        print("{} Парсить нечего".format(datetime.now()))
+                        if len(name_cols) == 0:
+                            print("{} Парсить нечего (числящиеся студенты не найдены)".format(datetime.now()))
+                        else:
+                            print("{} Парсить нечего (мало оценок)".format(datetime.now()))
                         continue
 
                     # Ищем шапку оценок
@@ -469,17 +502,15 @@ class StatementAnalysis(object):
             # Заносим данные во внутреннюю базу
             self.df_root.to_sql('root', self.conn , if_exists='replace', index = False)
             self.df_students.to_sql('students', self.conn, if_exists='replace', index = False)
-            table_name = ws_path[len(self.path + "/statements/"):-4]
-            db = self.conn.cursor()
-            db.execute('CREATE TABLE {} {}'.format(table_name, self.marks_db_attrs))
             self.conn.commit()
-            db.close()
-            df_marks.to_sql(table_name, self.conn, if_exists='replace', index = False)
 
         print("{} Парсинг завершен успешно".format(datetime.now()))
         
     # В SQL-базе вместо поля Group будет GroupNumber (Group - служебное слово)
     def __make_db_attrs(self, table_name):
+        '''Принимает table_name (str) - название ключа в config.json, описывающее поля определенной таблицы. Например, если нужно передать поля таблицы студентов, table_name="STUDENT_TABLE_ATTRS".
+           Возвращает перечисление полей с их типами в специальном формате (для создания таблицы в БД через SQL-запрос)
+        '''
         result = []
         for x in self.config[table_name]:
             if x in ("ID", "Year", "Row", "IsParsed"):
@@ -495,12 +526,14 @@ class StatementAnalysis(object):
         return "(" + ", ".join(result) + ")"    
 
     def __get_group_names(self):
+        '''Возвращает множество названий групп (извлекается из списков студентов)'''
         group_names = set()
         for group in self.df_students.Group.unique():
             group_names.add(group)
         return group_names    
         
     def __is_name(self, s):
+        '''Принимает s (str) - строка. Возвращает True или False в зависимости от того, "похожа" ли строка на имя'''
         r1 = re.match(r"^(\s*[a-zA-Zа-яА-Я]+.*\s+[a-zA-Zа-яА-Я]+.*\s+[a-zA-Zа-яА-Я]+.*\s+[a-zA-Zа-яА-Я]+.*\s*)", s)
         r2 = re.match(r"^(\s*[a-zA-Zа-яА-Я]+.*\s+[a-zA-Zа-яА-Я]+.*\s+[a-zA-Zа-яА-Я]+.*\s*)", s)
         r3 = re.match(r"^(\s*[a-zA-Zа-яА-Я]+.*\s+[a-zA-Zа-яА-Я]+.*\s*)", s)
@@ -508,12 +541,18 @@ class StatementAnalysis(object):
         return ((r1 is not None) or (r2 is not None) or (r3 is not None)) and (r4 is None)
 
     def __is_group_number(self, s, group_prefs):
+        '''Принимает:
+               s (str) - строка
+               group_prefs (list) - множество названий групп
+               Возвращает True или False в зависимости от того, является ли строка названием группы
+        '''
         for prefix in group_prefs:
             if re.search(r"{}".format(prefix), s) is not None:
                 return True
         return False
 
     def __is_mark(self, s):
+        '''Принимает s (str) - строка. Возвращает True или False в зависимости от того, является ли строка числом'''
         s = re.sub(r",", '.', s)
         try:
             float(s)        
@@ -521,7 +560,15 @@ class StatementAnalysis(object):
         except:
             return False
 
-    def __is_formula(self, value, title, titles):
+    def __is_formula(self, value, titles):
+        '''Применяется в обработке ведомостей в формате google-таблиц. 
+           Принимает:
+               value - значение ячейки (может быть числового формата или строкового)
+               titles (list) - список названий страниц в таблице
+           Возвращает пару (True/False, [...]):
+           True - если значение ячейки вычисляется на основе других ячеек. 
+           [...] - содержит названия страниц таблицы, которые упоминаются в значении ячейки
+        '''
         if type(value) != str:
             return (False, [])
         if value != '' and value[0] == '=':
@@ -536,6 +583,9 @@ class StatementAnalysis(object):
 
     # Нормируем только если нестандартные оценки (макс = 1 или > 10)
     def __norm_marks(self, marks):
+        '''Принимает marks (list) - список оценок.
+           Возвращает список оценок, приведенный к 10-балльной шкале
+        '''
         mx = max(marks)
         if mx < 5 or mx > 10 or (5 - mx < 0.0000001):
             if mx < 0.000001:
@@ -544,6 +594,7 @@ class StatementAnalysis(object):
         return marks
 
     def __make_new_path(self, path):
+        '''Принимает path (str) - путь. Возвращает путь с тем же названием следующего порядкового номера'''
         suff = 1
         while os.path.isfile(path):
             path = re.sub(r"(_*[0-9]*\.csv)$", "_{}.csv".format(suff), path)
@@ -552,6 +603,7 @@ class StatementAnalysis(object):
 
     @staticmethod
     def mark_name(mark):
+        '''Принимает mark (float/int) - оценку. Возвращает название оценки по 5-балльной шкале'''
         if mark < 3.5:
             return "Fail"
         if mark < 5.5:
@@ -562,6 +614,7 @@ class StatementAnalysis(object):
 
     @staticmethod
     def col_by_number(number):
+        '''Принимает number (int) - номер колонки в google-таблице. Возвращает буквенное название колонки'''
         result, cnst = "", ord('A')
         while number > 0:
             number -= 1
@@ -571,6 +624,7 @@ class StatementAnalysis(object):
     
     @staticmethod
     def number_by_col(letters):
+        '''Принимает letters (str) - буквенное название колонки в google-таблице. Возвращает ее порядковый номер'''
         result, cnst = 0, ord('A') - 1
         letters = letters[::-1]
         for i in range(len(letters)):
@@ -579,12 +633,18 @@ class StatementAnalysis(object):
 
     @staticmethod
     def from_to_cell(cell1, cell2):
+        '''Принимает диапазон ячеек:
+               cell1 (str) - начиная с какой ячейки (адрес ячейки)
+               cell2 (str) - заканчивая какой ячейкой (адрес ячейки)
+           Возвращает список адресов ячеек в данном диапазоне
+        '''
         cell1_col, cell2_col = re.sub(r"([0-9])", '', cell1), re.sub(r"([0-9])", '', cell2)
         cell_row = re.sub(r"([A-Z])", '', cell1)
         return [StatementAnalysis.col_by_number(x) + cell_row for x in range(StatementAnalysis.number_by_col(cell1_col), StatementAnalysis.number_by_col(cell2_col) + 1)]
 
     @staticmethod
     def cells_from_formula(formula):
+        '''Принимает formula (str) - строку. Возвращает адреса ячеек, встречающихся в данной формуле'''
         if formula == '':
             return None
         # Убираем ссылки на другие страницы
@@ -604,6 +664,7 @@ class StatementAnalysis(object):
     
     @staticmethod
     def cnt_positive_values(lst):
+        '''Принимает lst (list) - список чисел. Возвращает количество его положительных значений'''
         cnt = 0
         for value in lst:
             cnt += int(value > 0)
@@ -611,10 +672,12 @@ class StatementAnalysis(object):
     
     @staticmethod
     def remove_special_symbols(s):
+        '''Принимает s (str) - строку. Возвращает данную строку без пробельных символов'''
         return re.sub('[\n\t\r\v\f]', ' ', s)    
     
     @staticmethod
     def program_prefix(program):
+        '''Принимает program (str) - название образовательной программы. Возвращает ее аббревиатуру'''
         prefix = ""
         program_lst = program.split()
         for i in range(len(program_lst)):
