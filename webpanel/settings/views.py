@@ -16,7 +16,7 @@ current_path = os.getcwd()
 
 
 def processing_task(url):
-    print('idi nahui')
+    print("Async task started")
     os.chdir(data_path)
     StatementAnalysis(url=url, upd=False)
     os.chdir(current_path)
