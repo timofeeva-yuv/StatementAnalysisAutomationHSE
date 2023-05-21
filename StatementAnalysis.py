@@ -19,11 +19,12 @@ from tqdm import tqdm
 
 class StatementAnalysis(object):
     
-    def __init__(self, url, upd=False):
+    def __init__(self, url, upd=False, student_files=[]):
         with open("config/config.json", "r") as f:
             self.config = json.load(f)
             
         self.path = ""
+        self.student_files = student_files[:]
         self.root_db_attrs = self.__make_db_attrs("ROOT_TABLE_ATTRS")
         self.students_db_attrs = self.__make_db_attrs("STUDENT_TABLE_ATTRS")
         self.marks_db_attrs = self.__make_db_attrs("MARK_TABLE_ATTRS")
@@ -33,11 +34,14 @@ class StatementAnalysis(object):
         self.group_names = self.__get_group_names()
         
         self.__create_db()
+        
+        self.__parse_statements()
     
     def __call__(self, url, upd=False):
         self.root_df = self.__parse_root(url, upd)
         self.df_students = self.__parse_students_lists()        
         self.__create_db()
+        self.__parse_statements()
     
     def get(self, cmd):
         result = []
@@ -55,24 +59,11 @@ class StatementAnalysis(object):
     def __del__(self):
         try:
             self.conn.close()
-        except AttributeError:
+        except:
             pass
-    
-        # В SQL-базе вместо поля Group будет GroupNumber (Group - служебное слово)
-    def __make_db_attrs(self, table_name):
-        result = []
-        for x in self.config[table_name]:
-            if x in ("ID", "Year", "Row", "IsParsed"):
-                result.append(x + " integer")
-            elif x in ("10", "9", "8", "7", "6", "5", "4", "3", "2", "1", "0"):
-                result.append("\"{}\" real".format(x))
-            elif x in ("MarkCount", "MarkPositiveCount", "MeanMark", "MeanPositiveMark", "MarkSum"):
-                result.append(x + " real")
-            elif x == "Group":
-                result.append(x + "Number text")
-            else:
-                result.append(x + " text")
-        return "(" + ", ".join(result) + ")"
+        
+    def __parse_statements(self):
+        self.__parse_gsheets()    
     
     def __create_db(self):        
         self.conn = connect('{}/database'.format(self.path), check_same_thread=False)
@@ -88,10 +79,9 @@ class StatementAnalysis(object):
         
         db.close()
         
-    def __parse_root(self, url, upd):
+    def __parse_root(self, url_root_sheet, upd_flg):
         gc = pygsheets.authorize(service_file="client/client.json")
-
-        url_root_sheet = url
+        
         url_root_sheet = re.sub(r"/edit(.*)", '', url_root_sheet)
 
         URL_COLUMN_NAME = self.config["URL_COLUMN"] # колонка ссылок на ведомости
@@ -103,8 +93,6 @@ class StatementAnalysis(object):
         root_ws = root_sheet[0] # TODO
 
         values = root_ws.get_values(start="A1", end=(root_ws.rows, URL_COL_IND), include_tailing_empty_rows=False)
-
-        upd_flg = upd
 
         with open("data/data.json", "r") as f:
             existing_data = json.load(f)
@@ -159,8 +147,8 @@ class StatementAnalysis(object):
                     for url_prefix, url_type in self.config["URL_TYPE"].items():
                         if url_prefix in word:
                             data["Type"] = url_type
-    #                         if data["Type"] == "Google Sheet": # UPD
-    #                             data["URL"] =  re.sub(r"/edit(.*)", '', data["URL"]) # UPD
+                            if data["Type"] == "Google Sheet":
+                                data["URL"] =  re.sub(r"/edit(.*)", '', data["URL"])
                             break
                     df_root = df_root.append(data, ignore_index=True)        
 
@@ -175,10 +163,13 @@ class StatementAnalysis(object):
         return df_root[:]
     
     def __parse_students_lists(self):
-        # Excel-таблицы со студентами кладем в students_src
         if os.path.isfile(self.path + "/students.csv"):
             df_students = pd.read_csv(self.path + "/students.csv", sep=";")
         else:
+            old_path, new_path = self.config["STUDENT_LISTS_INITIAL_PATH"], self.path + "/students_src/"
+            for file in self.student_files:    
+                os.rename("{}/{}".format(old_path, file), "{}/{}".format(new_path, file))
+            
             print("{} Парсим списки студентов...".format(datetime.now()))
             students_df_original = pd.DataFrame()
             for file in os.listdir(self.path + "/students_src/"):
@@ -189,32 +180,30 @@ class StatementAnalysis(object):
             for i in tqdm(range(len(students_df_original))):
                 data = students_df_original.iloc[i]
                 if re.match(r"^(М[0-9]{3,4}[А-Я]{2,}[0-9][0-9][0-9]$)", data[0]) is not None:
-                    id_card, first_name, second_name, third_name  = data[0], data[1], data[2], data[3]
-                    year, group, program, email = int(data[4][0]), data[5], data[6], data[7]
+                    first_name, second_name, third_name  = data[1], data[2], data[3]
+                    year, group, program = int(data[4][0]), data[5], data[6]
                     if pd.isna(group):
                         continue
                     name = first_name + " " + second_name + " " + third_name
-                    row = {"ID": i, "Name": name, "Year": year, "Group": group, "Program":program, "Email": email, "IDCard":id_card, "MeanMark":0, "MeanPositiveMark":0, "MarkSum":0, "MarkCount":0, "MarkPositiveCount":0, "10":0, "9":0, "8":0, "7":0, "6":0, "5":0, "4":0, "3":0, "2":0, "1":0, "0":0}
-                    df_students = df_students.append(row, ignore_index=True) # UPD
+                    row = {"ID": i, "Name": name, "Year": year, "Group": group, "Program":program, "MeanMark":0, "MeanPositiveMark":0, "MarkSum":0, "MarkCount":0, "MarkPositiveCount":0, "10":0, "9":0, "8":0, "7":0, "6":0, "5":0, "4":0, "3":0, "2":0, "1":0, "0":0}
+                    df_students = df_students.append(row, ignore_index=True)
             df_students.to_csv(self.path + "/students.csv", sep=";", header=self.config["STUDENT_TABLE_ATTRS"], index=False)
             print("{} Списки студентов обработаны".format(datetime.now()))
             
         return df_students[:]
     
-    def __get_group_names(self):
-        group_names = set()
-        for group in self.df_students.Group.unique():
-            group_names.add(group)
-        return group_names
-    
     def __parse_gsheets(self):
+        gc = pygsheets.authorize(service_file="client/client.json")
+        
         # Начинаем парсить валидные ссылки
-        valid_links = self.df_root[(pd.isna(self.df_root.ErrorName) | self.df_root.ErrorName.str.contains("HttpError 403")) & (self.df_root.Type == "Google Sheet")] # UPD
-        for sh_ind in range(len(valid_links)):
-            sh = self.df_root[pd.isna(self.df_root.ErrorName) & (self.df_root.Type == "Google Sheet")].iloc[sh_ind]
+        gsh = self.df_root[self.df_root.Type == "Google Sheet"]
+        inds = set(gsh[pd.isna(gsh.ErrorName)].index)
+        inds |= set(gsh[gsh.ErrorName.str.len() > 12].index)
+        gsh = gsh.loc[list(inds)]
+        for sh_ind in gsh.index:
+            sh = gsh.loc[sh_ind]
             id_sheet, url_sheet = sh.ID, sh.URL
-    #         if len(self.df_root[(self.df_root.URL.str.contains(re.sub(r"/edit(.*)", '', url_sheet))) & pd.notna(self.df_root.IsParsed)]) > 0:
-            if len(self.df_root[(self.df_root.URL == url_sheet) & pd.notna(self.self.df_root.IsParsed)]) > 0:
+            if len(self.df_root[(self.df_root.URL == url_sheet) & pd.notna(self.df_root.IsParsed)]) > 0:
                 tmp = self.df_root[(self.df_root.URL == url_sheet) & pd.notna(self.df_root.IsParsed)]
                 row, ind = tmp.iloc[0], [tmp.index[0]]
                 new_row = self.df_root.loc[ind]
@@ -224,10 +213,10 @@ class StatementAnalysis(object):
                 new_row.MeanMark = row.MeanMark
                 new_row.MeanPositiveMark = row.MeanPositiveMark
                 new_row.MarkCount = row.MarkCount
-                new_row.MarkSum = row.MarkSum # UPD
-                new_row.MarkPositiveCount = row.MarkPositiveCount # UPD
-                for j in range(11): # UPD
-                    new_row[str(j)] = row[str(j)] # UPD
+                new_row.MarkSum = row.MarkSum
+                new_row.MarkPositiveCount = row.MarkPositiveCount
+                for j in range(11):
+                    new_row[str(j)] = row[str(j)]
                 self.df_root.loc[ind] = new_row
                 self.df_root.to_csv(self.path + "/root.csv", sep=";", header=self.config["ROOT_TABLE_ATTRS"], index=False)
                 if row.IsParsed:
@@ -252,28 +241,9 @@ class StatementAnalysis(object):
             print("\n\n{0} Парсим {1}".format(datetime.now(), sheet.title))
 
             df_marks = pd.DataFrame(columns=self.config["MARK_TABLE_ATTRS"])
-            ws_to_parse, ws_by_url, ws_forced_to_parse = [], None, set() # UPD
-            l, p, y, m, d, t = sh.Level[0], program_prefix(sh.Program), str(sh.Year), sh.Module, sh.Discipline, sh.Teacher.split(' ')[0]
+            ws_to_parse, ws_by_url = [ws.title for ws in sheet], None
+            l, p, y, m, d, t = sh.Level[0], self.program_prefix(sh.Program), str(sh.Year), sh.Module, sh.Discipline, sh.Teacher.split(' ')[0]
             ws_path = self.path + '/statements/' + l + p + '_' + y + "курс" + '_' + m + 'модуль_' + "_".join(d.split(' ')) + '_' + t + ".csv"
-
-            for ws in sheet:
-                title_original = ws.title
-                title = ws.title.upper()
-                if ws.url == url_sheet: # UPD
-                    ws_by_url = title_original # UPD
-                if re.search(r"(ГР|ГРУП|ГРУПП|ГРУППА|GROUP|GR)", title) is not None:
-                    ws_to_parse.append(title_original)
-                else:
-                    title = re.sub(r"([^A-ZА-Я0-9])", '', title)
-                    for group in self.group_names:
-                        if title in group or group in title: # UPD
-                            ws_to_parse.append(title_original)
-                            break
-            if len(ws_to_parse) == 0: # UPD
-                if ws_by_url is not None: # UPD
-                    ws_to_parse = [ws_by_url] # UPD
-                else: # UPD
-                    ws_to_parse = [w.title for w in sheet] # UPD
 
             # Парсим страницы внутри одного Google Sheet
             ind_stopped = 0
@@ -306,11 +276,11 @@ class StatementAnalysis(object):
                         cnt_all, cnt_numbers = 0, 0
 
                     # Разметка колонок
-                    self.df_root_row = self.df_root[self.df_root.ID == id_sheet]
-                    level, program = self.df_root_row.Level.iloc[0], self.df_root_row.Program.iloc[0]
+                    df_root_row = self.df_root[self.df_root.ID == id_sheet]
+                    level, program = df_root_row.Level.iloc[0], df_root_row.Program.iloc[0]
                     name_cols, group_cols, mark_cols = [], [], []
                     group_prefs = set()
-                    for group in df_students.Group.unique():
+                    for group in self.df_students.Group.unique():
                         group_prefs.add(group)
 
                     title = work_sheet.title
@@ -319,17 +289,14 @@ class StatementAnalysis(object):
                     for j in range(start_ind, cols + 1):
                         v = work_sheet.get_col(j)
                         name_cnt, group_cnt, mark_cnt, cnt = 0, 0, 0, 0
-                        neg_flg = False # TODO remove?
                         for i in range(rows):
                             name_cnt += self.__is_name(v[i])
                             group_cnt += self.__is_group_number(v[i], self.group_names)
 
-                            formula_data = self.__is_formula(cells_array[i][j - 1], title, titles) # UPD
-                            mark_cnt += self.__is_mark(v[i]) and not formula_data[0] # UPD
-                            ws_to_parse.extend(list(set(formula_data[1]) - set(ws_to_parse))) # UPD
-
-                            neg_flg = True if not neg_flg and self.__is_mark(v[i]) and float(re.sub(r",", '.', v[i])) < 0 else neg_flg
+                            formula_data = self.__is_formula(cells_array[i][j - 1], title, titles)
+                            mark_cnt += self.__is_mark(v[i]) and not formula_data[0]
                             cnt += 1
+                            
                         name_flg = name_cnt / cnt > self.config["NAME_COLUMN_THRESHOLD"]
                         group_flg = group_cnt / cnt > self.config["GROUP_COLUMN_THRESHOLD"]
                         mark_flg = mark_cnt / cnt > self.config["MARK_COLUMN_THRESHOLD"]
@@ -360,7 +327,7 @@ class StatementAnalysis(object):
 
                     mark_names = []
                     for i in mark_cols:
-                        mark_names.append((str(cells_array[mark_name_row][i - 1]) + " (" + col_by_number(i) + ")"))
+                        mark_names.append((str(cells_array[mark_name_row][i - 1]) + " (" + self.col_by_number(i) + ")"))
 
                     ambiguous_students = []
                     not_found_students = []
@@ -375,7 +342,7 @@ class StatementAnalysis(object):
                         group_name = cells_array[i][group_cols[0] - 1] if len(group_cols) != 0 else np.nan
 
                         name_lst = re.sub('([^A-Za-zА-Яа-я])', ' ', student_name).split()
-                        tmp = df_students[:]
+                        tmp = self.df_students[:]
                         for j in name_lst:
                             tmp = tmp[tmp.Name.str.contains(j)]
                             tmp.Name = tmp.Name.str.replace(j, "")
@@ -412,7 +379,7 @@ class StatementAnalysis(object):
                             marks.append(mark)
                         marks_dct = dict(zip(mark_names, marks))    
 
-                        ind = df_students[df_students.ID == tmp.iloc[0].ID].index[0]
+                        ind = self.df_students[self.df_students.ID == tmp.iloc[0].ID].index[0]
                         students_inds.append(ind)
                         marks_norm = np.vstack([marks_norm, marks])
 
@@ -429,33 +396,29 @@ class StatementAnalysis(object):
 
                     for i in range(ind_stopped, len(df_marks)):
                         marks = marks_norm[i - ind_stopped, :]
-                        positive_cnt = cnt_positive_values(marks) # UPD
+                        positive_cnt = self.cnt_positive_values(marks)
 
-                        dct = Counter([round(mark) for mark in marks]) # UPD
+                        dct = Counter([round(mark) for mark in marks])
                         ind = [students_inds[i - ind_stopped]]
-                        row = df_students.loc[ind]
+                        row = self.df_students.loc[ind]
                         row.MarkSum += sum(marks)
                         row.MarkCount += len(marks)
-                        row.MarkPositiveCount += positive_cnt # UPD
+                        row.MarkPositiveCount += positive_cnt
                         row.MeanMark = row.MarkSum / row.MarkCount if row.MarkCount.iloc[0] > 0 else 0.0
-                        row.MeanPositiveMark = row.MarkSum / row.MarkPositiveCount if row.MarkPositiveCount.iloc[0] > 0 else 0.0 # UPD
-                        # UPD
+                        row.MeanPositiveMark = row.MarkSum / row.MarkPositiveCount if row.MarkPositiveCount.iloc[0] > 0 else 0.0 
                         for j in range(11):
-                            row[str(j)] += dct[j]
-                        # END UPD                       
-                        df_students.loc[ind] = row
+                            row[str(j)] += dct[j]                      
+                        self.df_students.loc[ind] = row
 
                         row = df_marks.loc[i]
                         row.MarksNorm = marks.tolist()
-                        row.MarkSum = sum(marks) # UPD
-                        row.MarkCount = len(marks) # UPD
-                        row.MarkPositiveCount = positive_cnt # UPD
+                        row.MarkSum = sum(marks)
+                        row.MarkCount = len(marks)
+                        row.MarkPositiveCount = positive_cnt
                         row.MeanMark = row.MarkSum / len(marks) if len(marks) > 0 else 0.0
-                        row.MeanPositiveMark = row.MarkSum / positive_cnt if positive_cnt > 0 else 0.0 # UPD
-                        # UPD
+                        row.MeanPositiveMark = row.MarkSum / positive_cnt if positive_cnt > 0 else 0.0
                         for j in range(11):
                             row[str(j)] = dct[j]
-                        # END UPD  
                         df_marks.loc[i] = row
 
                     ind_stopped = len(df_marks)
@@ -491,94 +454,58 @@ class StatementAnalysis(object):
             row.Path = ws_path
             sm = sum([sum(x) for x in df_marks.MarksNorm])
             cnt = sum([len(x) for x in df_marks.MarksNorm])
-            row.MarkSum = sm # UPD
-            row.MarkCount = cnt # UPD
+            row.MarkSum = sm
+            row.MarkCount = cnt
             row.MeanMark = sm / cnt if cnt > 0 else 0.0
-            # row.MeanMeanMark = df_marks.Mean.mean() # UPD
-            cnt_pos = sum([cnt_positive_values(row) for row in df_marks.MarksNorm])
-            row.MarkPositiveCount = cnt_pos # UPD
+            cnt_pos = sum([self.cnt_positive_values(row) for row in df_marks.MarksNorm])
+            row.MarkPositiveCount = cnt_pos
             row.MeanPositiveMark = sm / cnt_pos if cnt_pos > 0 else 0.0
-            # UPD
             for j in range(11):
                 row[str(j)] = df_marks[str(j)].sum()
-            # END UPD  
             self.df_root.loc[ind] = row
             self.df_root.to_csv(self.path + "/root.csv", sep=";", header=self.config["ROOT_TABLE_ATTRS"], index=False)
-            df_students.to_csv(self.path + "/students.csv", sep=";", header=self.config["STUDENT_TABLE_ATTRS"], index=False)
+            self.df_students.to_csv(self.path + "/students.csv", sep=";", header=self.config["STUDENT_TABLE_ATTRS"], index=False)
             
             # Заносим данные во внутреннюю базу
+            self.df_root.to_sql('root', self.conn , if_exists='replace', index = False)
+            self.df_students.to_sql('students', self.conn, if_exists='replace', index = False)
+            table_name = ws_path[len(self.path + "/statements/"):-4]
             db = self.conn.cursor()
-            df_root.to_sql('root', db , if_exists='replace', index = False)
-            df_students.to_sql('students', db, if_exists='replace', index = False)
-            table_name = ws_path[len(path + "/statements/"):-4]
-            self.db.execute('CREATE TABLE {} {}'.format(table_name, self.marks_db_attrs))
+            db.execute('CREATE TABLE {} {}'.format(table_name, self.marks_db_attrs))
             self.conn.commit()
-            df_marks.to_sql(table_name, self.conn, if_exists='replace', index = False)
             db.close()
+            df_marks.to_sql(table_name, self.conn, if_exists='replace', index = False)
 
         print("{} Парсинг завершен успешно".format(datetime.now()))
-    
-    @staticmethod
-    def remove_special_symbols(s):
-        return re.sub('[\n\t\r\v\f]', ' ', s)    
-
-    @staticmethod
-    def number_by_col(letters):
-        result, cnst = 0, ord('A') - 1
-        letters = letters[::-1]
-        for i in range(len(letters)):
-            result += pow(26, i) * (ord(letters[i]) - cnst)
-        return result
-
-    @staticmethod
-    def col_by_number(number):
-        result, cnst = "", ord('A')
-        while number > 0:
-            number -= 1
-            result = chr(number % 26 + cnst) + result
-            number //= 26
-        return result
-
-    @staticmethod
-    def from_to_cell(cell1, cell2):
-        cell1_col, cell2_col = re.sub(r"([0-9])", '', cell1), re.sub(r"([0-9])", '', cell2)
-        cell_row = re.sub(r"([A-Z])", '', cell1)
-        return [col_by_number(x) + cell_row for x in range(number_by_col(cell1_col), number_by_col(cell2_col) + 1)]
-
-    @staticmethod
-    def cells_from_formula(formula):
-        if formula == '':
-            return None
-        # Убираем ссылки на другие страницы
-        formula = re.sub(r"('.+'!\$*[A-Z]+\$*[0-9]*:*\$*[A-Z]*\$*[0-9]*)", '', formula)
-        cells = re.findall(r"(\$*[A-Z]+\$*[0-9]+:*)", formula)
-        cells = [re.sub('\$', '', x) for x in cells]
-        result, i = [], 0
-        while i < len(cells):
-            if cells[i][-1] == ':':
-                l = from_to_cell(cells[i][:-1], cells[i + 1])
-                result.extend(l)
-                i += 2
+        
+    # В SQL-базе вместо поля Group будет GroupNumber (Group - служебное слово)
+    def __make_db_attrs(self, table_name):
+        result = []
+        for x in self.config[table_name]:
+            if x in ("ID", "Year", "Row", "IsParsed"):
+                result.append(x + " integer")
+            elif x in ("10", "9", "8", "7", "6", "5", "4", "3", "2", "1", "0"):
+                result.append("\"{}\" real".format(x))
+            elif x in ("MarkCount", "MarkPositiveCount", "MeanMark", "MeanPositiveMark", "MarkSum"):
+                result.append(x + " real")
+            elif x == "Group":
+                result.append(x + "Number text")
             else:
-                result.append(cells[i])
-                i += 1
-        return result
+                result.append(x + " text")
+        return "(" + ", ".join(result) + ")"    
 
+    def __get_group_names(self):
+        group_names = set()
+        for group in self.df_students.Group.unique():
+            group_names.add(group)
+        return group_names    
+        
     def __is_name(self, s):
         r1 = re.match(r"^(\s*[a-zA-Zа-яА-Я]+.*\s+[a-zA-Zа-яА-Я]+.*\s+[a-zA-Zа-яА-Я]+.*\s+[a-zA-Zа-яА-Я]+.*\s*)", s)
         r2 = re.match(r"^(\s*[a-zA-Zа-яА-Я]+.*\s+[a-zA-Zа-яА-Я]+.*\s+[a-zA-Zа-яА-Я]+.*\s*)", s)
         r3 = re.match(r"^(\s*[a-zA-Zа-яА-Я]+.*\s+[a-zA-Zа-яА-Я]+.*\s*)", s)
         r4 = re.search(r"([0-9])", s)
         return ((r1 is not None) or (r2 is not None) or (r3 is not None)) and (r4 is None)
-
-    @staticmethod
-    def program_prefix(program):
-        prefix = ""
-        program_lst = program.split()
-        for i in range(len(program_lst)):
-            if len(program_lst[i]) > 3: # пропускаем предлоги, союзы и т.д.
-                prefix += program_lst[i][0].upper()
-        return prefix
 
     def __is_group_number(self, s, group_prefs):
         for prefix in group_prefs:
@@ -594,7 +521,6 @@ class StatementAnalysis(object):
         except:
             return False
 
-    # UPD
     def __is_formula(self, value, title, titles):
         if type(value) != str:
             return (False, [])
@@ -603,11 +529,26 @@ class StatementAnalysis(object):
             found_titles = re.findall(regex, value)
             if len(found_titles) != 0:
                 return (True, found_titles)
-            if len(cells_from_formula(value)) == 0:
+            if len(self.cells_from_formula(value)) == 0:
                 return (False, [])
             return (True, [])
         return (False, [])
-    # END UPD
+
+    # Нормируем только если нестандартные оценки (макс = 1 или > 10)
+    def __norm_marks(self, marks):
+        mx = max(marks)
+        if mx < 5 or mx > 10 or (5 - mx < 0.0000001):
+            if mx < 0.000001:
+                return [0] * len(marks)
+            return [10 * mark / mx for mark in marks]
+        return marks
+
+    def __make_new_path(self, path):
+        suff = 1
+        while os.path.isfile(path):
+            path = re.sub(r"(_*[0-9]*\.csv)$", "_{}.csv".format(suff), path)
+            suff += 1
+        return path
 
     @staticmethod
     def mark_name(mark):
@@ -619,33 +560,72 @@ class StatementAnalysis(object):
             return "Good"
         return "Excellent"
 
-    # Нормируем только если нестандартные оценки (макс = 1 или > 10)
-    def __norm_marks(self, marks):
-        mx = max(marks)
-        if mx < 5 or mx > 10 or (5 - mx < 0.0000001):
-            if mx < 0.000001:
-                return [0] * len(marks)
-            return [10 * mark / mx for mark in marks]
-        return marks
+    @staticmethod
+    def col_by_number(number):
+        result, cnst = "", ord('A')
+        while number > 0:
+            number -= 1
+            result = chr(number % 26 + cnst) + result
+            number //= 26
+        return result
+    
+    @staticmethod
+    def number_by_col(letters):
+        result, cnst = 0, ord('A') - 1
+        letters = letters[::-1]
+        for i in range(len(letters)):
+            result += pow(26, i) * (ord(letters[i]) - cnst)
+        return result
 
+    @staticmethod
+    def from_to_cell(cell1, cell2):
+        cell1_col, cell2_col = re.sub(r"([0-9])", '', cell1), re.sub(r"([0-9])", '', cell2)
+        cell_row = re.sub(r"([A-Z])", '', cell1)
+        return [StatementAnalysis.col_by_number(x) + cell_row for x in range(StatementAnalysis.number_by_col(cell1_col), StatementAnalysis.number_by_col(cell2_col) + 1)]
+
+    @staticmethod
+    def cells_from_formula(formula):
+        if formula == '':
+            return None
+        # Убираем ссылки на другие страницы
+        formula = re.sub(r"('.+'!\$*[A-Z]+\$*[0-9]*:*\$*[A-Z]*\$*[0-9]*)", '', formula)
+        cells = re.findall(r"(\$*[A-Z]+\$*[0-9]+:*)", formula)
+        cells = [re.sub('\$', '', x) for x in cells]
+        result, i = [], 0
+        while i < len(cells):
+            if cells[i][-1] == ':':
+                l = StatementAnalysis.from_to_cell(cells[i][:-1], cells[i + 1])
+                result.extend(l)
+                i += 2
+            else:
+                result.append(cells[i])
+                i += 1
+        return result
+    
     @staticmethod
     def cnt_positive_values(lst):
         cnt = 0
         for value in lst:
             cnt += int(value > 0)
         return cnt
-
-    def __make_new_path(self, path):
-        suff = 1
-        while os.path.isfile(path):
-            path = re.sub(r"(_*[0-9]*\.csv)$", "_{}.csv".format(suff), path)
-            suff += 1
-        return path
+    
+    @staticmethod
+    def remove_special_symbols(s):
+        return re.sub('[\n\t\r\v\f]', ' ', s)    
+    
+    @staticmethod
+    def program_prefix(program):
+        prefix = ""
+        program_lst = program.split()
+        for i in range(len(program_lst)):
+            if len(program_lst[i]) > 3: # пропускаем предлоги, союзы и т.д.
+                prefix += program_lst[i][0].upper()
+        return prefix    
     
 if __name__ == "__main__":
     url = "https://docs.google.com/spreadsheets/d/1IyfSPiiR0DUxYuConiYzuokM2hUQbOBpuJAeAlGi7kc/edit#gid=223389382"
     upd = False # обработать ли ведомости заново?
-    s = StatementAnalysis(url, upd)
+    s = StatementAnalysis(url, upd, ["students_bachelor.xlsx", "students_master.xlsx"])
     print(s.get("Завышение"))
     print("\n")
     print(s.get("Неуспевающие"))

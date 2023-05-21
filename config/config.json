@@ -5,7 +5,6 @@
     "GROUP_COLUMN_THRESHOLD": 0.1,
     "MARK_COLUMN_THRESHOLD": 0.2,
     "MARK_COUNT_THRESHOLD": 2,
-    "UPDATE": 1,
     "ROOT_TABLE_ATTRS": [
                            "ID", 
                            "Level", 
@@ -23,11 +22,20 @@
                            "Path",
                            "MeanMark",
                            "MeanPositiveMark",
-                           "MeanMeanMark",
-                           "Excellent",
-                           "Good",
-                           "Satisfactory",
-                           "Fail"
+                           "MarkSum",
+                           "MarkCount",
+                           "MarkPositiveCount",
+                           "10",
+                           "9",
+                           "8",
+                           "7",
+                           "6",
+                           "5",
+                           "4",
+                           "3",
+                           "2",
+                           "1",
+                           "0"
                           ],
                           
     "ATTR_COLUMNS": {
@@ -45,16 +53,23 @@
                            "Name", 
                            "Year", 
                            "Group", 
-                           "Program", 
-                           "Email", 
-                           "IDCard",
+                           "Program",
+                           "MeanMark",
+                           "MeanPositiveMark",
                            "MarkSum",
                            "MarkCount",
-                           "Mean",
-                           "Excellent",
-                           "Good",
-                           "Satisfactory",
-                           "Fail"
+                           "MarkPositiveCount",
+                           "10",
+                           "9",
+                           "8",
+                           "7",
+                           "6",
+                           "5",
+                           "4",
+                           "3",
+                           "2",
+                           "1",
+                           "0"
                           ],
                           
     "MARK_TABLE_ATTRS": [
@@ -63,11 +78,22 @@
                            "Group",
                            "MarksDict",
                            "MarksNorm", 
-                           "Excellent",
-                           "Good",
-                           "Satisfactory",
-                           "Fail",
-                           "Mean"
+                           "MeanMark",
+                           "MeanPositiveMark",
+                           "MarkSum",
+                           "MarkCount",
+                           "MarkPositiveCount",
+                           "10",
+                           "9",
+                           "8",
+                           "7",
+                           "6",
+                           "5",
+                           "4",
+                           "3",
+                           "2",
+                           "1",
+                           "0"
                           ], 
 
     "URL_TYPE": {
@@ -78,5 +104,7 @@
                  "sharepoint.com": "Sharepoint",
                  "teams.microsoft.com": "MS Teams",
                  "dropbox.com": "Dropbox"
-                }
+                },
+
+    "STUDENT_LISTS_INITIAL_PATH": "tmp"	                
 }
