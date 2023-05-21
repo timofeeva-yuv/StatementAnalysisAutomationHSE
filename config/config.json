@@ -106,5 +106,8 @@
                  "dropbox.com": "Dropbox"
                 },
 
-    "STUDENT_LISTS_INITIAL_PATH": "tmp"	                
+    "STUDENT_LISTS_INITIAL_PATH": "tmp",
+    "FAIL_STUDENTS_TOP": 0.05,
+    "OVERESTIMATION_GREAT_PERCENT": 0.5,
+    "OVERESTIMATION_10_PERCENT": 0.35
 }

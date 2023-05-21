@@ -49,9 +49,9 @@ class StatementAnalysis(object):
         if cmd == "Неуспевающие":
             res = db.execute('SELECT ID, Name, CAST(SUM("0" + "1" + "2" + "3") AS real) / CAST(MarkCount AS real) AS "Доля неудов" FROM students GROUP BY ID, Name ORDER BY "Доля неудов" DESC')
             result = res.fetchall()
-            result = result[:int(0.05 * len(result))] # 5% по доле неудов
+            result = result[:int(self.config["FAIL_STUDENTS_TOP"] * len(result))] # 5% по доле неудов
         elif cmd == "Завышение":
-            res = db.execute('SELECT * FROM root WHERE "10" / MarkCount >= 0.5')
+            res = db.execute('SELECT * FROM root WHERE (("10" + "9" + "8") / MarkCount >= {}) AND ("10" / MarkCount >= {})'.format(config["OVERESTIMATION_GREAT_PERCENT"], config["OVERESTIMATION_10_PERCENT"]))
             result = res.fetchall()
         db.close()
         return result
