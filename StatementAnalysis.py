@@ -40,9 +40,10 @@ class StatementAnalysis(object):
         self.group_names = self.__get_group_names()
         
         self.__create_db()
-        
-        self.__parse_statements()
-    
+
+        if upd:
+            self.__parse_statements()
+
     def __call__(self, url, upd=False, student_files=[]):
         '''Принимает по порядку:
                 url (str) - ссылка на google-таблицу с ведомостями
