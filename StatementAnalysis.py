@@ -20,7 +20,7 @@ from tqdm import tqdm
 class StatementAnalysis(object):
     '''Анализатор ведомостей факультета компьютерных наук НИУ ВШЭ'''
     
-    def __init__(self, url, upd=False, student_files=[], retry=True):
+    def __init__(self, url, upd=False, student_files=[], retry=False):
         '''Принимает по порядку:
                 url (str) - ссылка на google-таблицу с ведомостями
                 upd (bool) - True, если нужно обновить обработку ранее обработанных ведомостей. По умолчанию - False
@@ -45,7 +45,7 @@ class StatementAnalysis(object):
         if retry:
             self.__parse_statements()
     
-    def __call__(self, url, upd=False, student_files=[], retry=True):
+    def __call__(self, url, upd=False, student_files=[], retry=False):
         '''Принимает по порядку:
                 url (str) - ссылка на google-таблицу с ведомостями
                 upd (bool) - True, если нужно обновить обработку ранее обработанных ведомостей. По умолчанию - False
