@@ -20,11 +20,12 @@ from tqdm import tqdm
 class StatementAnalysis(object):
     '''Анализатор ведомостей факультета компьютерных наук НИУ ВШЭ'''
     
-    def __init__(self, url, upd=False, student_files=[]):
+    def __init__(self, url, upd=False, student_files=[], retry=True):
         '''Принимает по порядку:
                 url (str) - ссылка на google-таблицу с ведомостями
                 upd (bool) - True, если нужно обновить обработку ранее обработанных ведомостей. По умолчанию - False
                 student_files (list) - список названий excel-файлов со списками студентов. По умолчанию - пустой список
+                retry (bool) - True, если нужно ли возобновить обработку с той ведомости, на которой программа прервалась или нужно попытаться распарсить ведомости, которые не удалось обработать из-за ошибки
         '''
         with open("config/config.json", "r") as f:
             self.config = json.load(f)
@@ -41,9 +42,10 @@ class StatementAnalysis(object):
         
         self.__create_db()
         
-        self.__parse_statements()
+        if retry:
+            self.__parse_statements()
     
-    def __call__(self, url, upd=False, student_files=[]):
+    def __call__(self, url, upd=False, student_files=[], retry=True):
         '''Принимает по порядку:
                 url (str) - ссылка на google-таблицу с ведомостями
                 upd (bool) - True, если нужно обновить обработку ранее обработанных ведомостей. По умолчанию - False
@@ -56,7 +58,8 @@ class StatementAnalysis(object):
         
         self.__create_db()
         
-        self.__parse_statements()
+        if retry:
+            self.__parse_statements()
     
     def get(self, cmd):
         ''' Принимает cmd (str) - название запроса. Например, "Неуспевающие" или "Завышение".
@@ -65,12 +68,14 @@ class StatementAnalysis(object):
         result = []
         db = self.conn.cursor()
         if cmd == "Неуспевающие":
-            res = db.execute('SELECT ID, Name, CAST(SUM("0" + "1" + "2" + "3") AS real) / CAST(MarkCount AS real) AS "Доля неудов" FROM students GROUP BY ID, Name ORDER BY "Доля неудов" DESC')
+            res = db.execute('SELECT Name, "Group", CAST(SUM("0" + "1" + "2" + "3") AS real) / CAST(MarkCount AS real) AS "Доля неудов" FROM students GROUP BY ID, Name ORDER BY "Доля неудов" DESC')
             result = res.fetchall()
             result = result[:int(self.config["FAIL_STUDENTS_TOP"] * len(result))] # 5% по доле неудов
+            result.insert(0, ("Студент", "Группа", "Доля 'неудов'"))
         elif cmd == "Завышение":
-            res = db.execute('SELECT * FROM root WHERE (("10" + "9" + "8") / MarkCount >= {}) AND ("10" / MarkCount >= {})'.format(self.config["OVERESTIMATION_GREAT_PERCENT"], self.config["OVERESTIMATION_10_PERCENT"]))
+            res = db.execute('SELECT Discipline, Teacher, URL, Row, Path, MeanMark, MeanPositiveMark, "10", "9", "8", "7", "6", "5", "4", "3", "2", "1", "0", ("10" + "9" + "8") / MarkCount AS GreatPercent, "10" / MarkCount AS TenPercent FROM root WHERE (("10" + "9" + "8") / MarkCount >= {}) AND ("10" / MarkCount >= {})'.format(self.config["OVERESTIMATION_GREAT_PERCENT"], self.config["OVERESTIMATION_10_PERCENT"]))
             result = res.fetchall()
+            result.insert(0, ("Предмет", "Преподаватель", "Ссылка", "Номер строки в root-таблице", "Путь к csv", "Средняя оценка", "Средняя ненулевая оценка", "Кол-во 10", "Кол-во 9", "Кол-во 8", "Кол-во 7", "Кол-во 6", "Кол-во 5", "Кол-во 4", "Кол-во 3", "Кол-во 2", "Кол-во 1", "Кол-во 0", "Доля 'отлов'", "Доля 10"))
         db.close()
         return result
     
@@ -123,7 +128,7 @@ class StatementAnalysis(object):
         with open("data/data.json", "r") as f:
             existing_data = json.load(f)
 
-        if (url_root_sheet in existing_data) and not upd_flg:
+        if (url_root_sheet in existing_data) and (not upd_flg):
             print("{} Таблица с ведомостями уже обработана".format(datetime.now()))
             self.path = existing_data[url_root_sheet]
             df_root = pd.read_csv(self.path + "/root.csv", sep=";")
@@ -572,7 +577,7 @@ class StatementAnalysis(object):
         if type(value) != str:
             return (False, [])
         if value != '' and value[0] == '=':
-            regex = re.compile("(" + "|".join([t for t in titles]) + ")")
+            regex = re.compile("(" + "|".join([re.escape(t) for t in titles]) + ")")
             found_titles = re.findall(regex, value)
             if len(found_titles) != 0:
                 return (True, found_titles)
@@ -686,9 +691,13 @@ class StatementAnalysis(object):
         return prefix    
     
 if __name__ == "__main__":
-    url = "https://docs.google.com/spreadsheets/d/1IyfSPiiR0DUxYuConiYzuokM2hUQbOBpuJAeAlGi7kc/edit#gid=223389382"
-    upd = False # обработать ли ведомости заново?
-    s = StatementAnalysis(url, upd, ["students_bachelor.xlsx", "students_master.xlsx"])
+    if len(sys.argv) == 1:
+        url = "https://docs.google.com/spreadsheets/d/1IyfSPiiR0DUxYuConiYzuokM2hUQbOBpuJAeAlGi7kc/edit#gid=223389382"
+        upd = False # обработать ли ведомости заново?
+        retry = False # False - если не надо продолжать обработку или не надо допарсить ведомости с ошибками; т.е. анализируем, то что успело распарситься
+    else:
+        url, upd, retry = sys.argv[1], bool(int(sys.argv[2])), bool(int(sys.argv[3]))
+    s = StatementAnalysis(url, upd, ["students_bachelor.xlsx", "students_master.xlsx"], retry)
     print(s.get("Завышение"))
     print("\n")
     print(s.get("Неуспевающие"))
