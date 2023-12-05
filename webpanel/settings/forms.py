@@ -8,4 +8,4 @@ class InputUrlForm(forms.Form):
 
 class UploadStudentsForm(forms.Form):
     files = forms.FileField(label='Списки студентов в формате .xlsx',
-                            widget=forms.ClearableFileInput(attrs={'multiple': True}))
+                            widget=forms.ClearableFileInput())
